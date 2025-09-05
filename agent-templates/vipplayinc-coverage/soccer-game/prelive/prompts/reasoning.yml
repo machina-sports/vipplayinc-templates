@@ -1,0 +1,78 @@
+prompts:
+
+  # coverage-event-prelive-reasoning-prompt
+  - type: prompt
+    name: coverage-event-prelive-reasoning-prompt
+    title: "Coverage - Prelive Introduction Reasoning"
+    description: "Generate editorial briefing script for planning Prelive Introduction content focusing on latest team preparation news, injuries, transfers, and breaking developments"
+    schema:
+      title: "PromptTopicEventIntroductionCoverageGenerator"
+      description: "Generate editorial briefing script for planning Prelive Introduction coverage focusing on recent team preparation, injury updates, transfer market news, breaking developments, and latest team news leading up to the match"
+      required:
+        - title
+        - content
+        - subject
+        - search_queries
+      type: "object"
+      properties:
+        content:
+          type: "string"
+          description: "Brief editorial outline highlighting key focus points for recent team preparation coverage, including injury updates, transfer developments, training camp news, and breaking stories from the past few days"
+        title:
+          type: "string"
+          description: "Engaging title that clearly represents the recent team news or breaking developments being covered"
+        subject:
+          type: "string"
+          description: "Main focus of the recent news coverage (e.g., 'Team injury crisis ahead of Champions League', 'Last-minute transfer speculation', 'Manager's latest tactical preparations', 'Breaking team news updates')"
+        search_queries:
+          type: "array"
+          items:
+            type: "object"
+            required:
+              - title
+              - query
+              - type
+              - source
+            description: "List of search queries with their types to gather latest news and breaking developments about team preparation, injuries, transfers, and recent updates, 2-3 queries to cover current developments"
+            minItems: 2
+            maxItems: 3
+            properties:
+              title:
+                type: "string"
+                description: "Title of the search query"
+              query:
+                type: "string"
+                description: |
+                  The actual search query to be executed. Should be specific and targeted to recent team news and developments. Examples:
+                  - For injury news: 'Manchester United injury list today latest updates Rashford Martinez'
+                  - For transfer news: 'Real Madrid transfer news today January 2024 latest signings'
+                  - For team preparation: 'Liverpool training camp news Klopp latest tactics Champions League'
+                  - For breaking news: 'Arsenal breaking news today Arteta press conference latest'
+              type:
+                type: "string"
+                enum:
+                  - "TEAM_INJURY_NEWS"
+                  - "TRANSFER_MARKET_NEWS"
+                  - "TEAM_PREPARATION_NEWS"
+                  - "BREAKING_TEAM_NEWS"
+                  - "MANAGER_PRESS_CONFERENCES"
+                  - "TRAINING_CAMP_UPDATES"
+                  - "SQUAD_ROTATION_NEWS"
+                  - "PLAYER_FITNESS_UPDATES"
+                  - "TACTICAL_PREPARATIONS"
+                  - "TEAM_SELECTION_SPECULATION"
+                  - "CONTRACT_NEGOTIATIONS"
+                  - "LOAN_DEAL_UPDATES"
+                  - "MEDICAL_TEAM_REPORTS"
+                  - "PRE_MATCH_BRIEFINGS"
+                  - "TEAM_MORALE_REPORTS"
+                  - "LATEST_SOCIAL_MEDIA_UPDATES"
+                  - "INSIDER_TEAM_NEWS"
+                description: "The type of recent news search being performed"
+              source:
+                type: "string"
+                description: "The source of the search query"
+                enum:
+                  - "WIKIPEDIA"
+                  - "ONEFOOTBALL"
+                  - "GLOBOESPORTE"

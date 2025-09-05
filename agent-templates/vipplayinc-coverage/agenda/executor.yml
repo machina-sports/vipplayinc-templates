@@ -1,0 +1,262 @@
+workflow:
+
+  name: coverage-researcher-executor
+  title: "Coverage - Researcher Executor"
+  description: "Workflow to execute researcher."
+  context-variables:
+    debugger:
+      enabled: true
+    google-genai:
+      api_key: "$TEMP_CONTEXT_VARIABLE_GOOGLE_GENERATIVE_AI_API_KEY"
+    machina-ai:
+      api_key: "$TEMP_CONTEXT_VARIABLE_SDK_OPENAI_API_KEY"
+  outputs:
+    workflow-status: "$.get('workflow-status', 'skipped')"
+  tasks:
+
+    # load-next-agenda
+    - type: document
+      name: load-next-agenda
+      connector:
+        name: machina-ai
+        command: "invoke_embedding"
+        model: "text-embedding-3-small"
+      config:
+        action: "search"
+        search-limit: 1
+        search-vector: false
+        search-sorters: ["value.agenda-control.updated", 1]
+      filters:
+        metadata.content-group: "{'$in': ['SPORTS_SOCCER_EVENT']}"
+        value.agenda-control.processing: "{'$ne': True}"
+        value.agenda-control.finished: "{'$ne': True}"
+      inputs:
+        name: "'content-agenda'"
+      outputs:
+        agenda-exists: "len($.get('documents', [])) > 0 if $.get('documents') else False"
+        agenda-document: "$.get('documents', [{}])[0] if $.get('documents') else None"
+        agenda-document-id: "$.get('documents', [{}])[0].get('_id', '') if $.get('documents') else ''"
+        agenda-metadata: "$.get('documents', [{}])[0].get('metadata', {}) if $.get('documents') else None"
+        agenda-value: "$.get('documents', [{}])[0].get('value', {}) if $.get('documents') else None"
+
+    # document-agenda-control
+    - type: document
+      name: coverage-agenda-control-processing
+      condition: "$.get('agenda-exists') is True"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      filters:
+        document_id: "$.get('agenda-document-id')"
+      documents:
+        content-agenda: |
+          {
+            **$.get('agenda-value', {}),
+            'agenda-control': {
+              **$.get('agenda-control', {}),
+              'processing': True,
+              'updated': datetime.utcnow()
+            }
+          }
+
+    # mapping agenda-control
+    - type: mapping
+      name: coverage-mapping-agenda-control
+      condition: "$.get('agenda-exists') is True"
+      inputs:
+        _document: "$.get('agenda-value')"
+        _metadata: "$.get('agenda-metadata')"
+      outputs:
+        agenda-control: "$.get('agenda-control')"
+        agenda-control-finished: "$.get('agenda-control', {}).get('finished', False)"
+        agenda-counter: "$.get('agenda-counter')"
+        custom_instruction: "$.get('custom_instruction')"
+        custom_topic_name: "$.get('custom_topic_name')"
+        content-group: "$.get('content-group')"
+        content-name: "$.get('content-name')"
+        content-topic: "$.get('content-topic')"
+        event_code: "$.get('event_code')"
+        script-instructions: "$.get('script-instructions')"
+
+    # mapping researcher-control
+    - type: mapping
+      name: coverage-mapping-researcher-custom-instruction
+      condition: "$.get('agenda-exists') is True"
+      inputs:
+        _document: "$.get('agenda-value')"
+        _metadata: "$.get('agenda-metadata')"
+        _custom_instruction: "$.get('custom_instruction')"
+        _custom_topic_name: "$.get('custom_topic_name')"
+      outputs:
+        researcher-control: "$.get('researcher-control')"
+        researcher-control-status: "$.get('researcher-control-status')"
+        researcher-control-queries: "$.get('researcher-control-new-queries', [])"
+        researcher-control-queries-length: "len($.get('researcher-control-new-queries', []))"
+
+    # create new search request
+    - type: document
+      name: create-search-request
+      condition: |
+        (
+          $.(agenda-exists) is True
+          and '$.(researcher-control-status)' == 'pending'
+          and $.(researcher-control-queries-length) > 0
+        )
+      config:
+        action: "bulk-save"
+        embed-vector: false
+        force-update: true
+      document_name: "'web-search'"
+      documents:
+        items: "$.get('parsed-items', [])"
+      inputs:
+        parsed-items: "$.get('researcher-control-queries')"  
+      outputs:
+        researcher-control-status: "'executed'"
+        workflow-status: "'executed'"
+
+    # load-searches-and-scrapings
+    - type: document
+      name: load-searches-and-scrapings
+      condition: |
+        (
+          $.(agenda-exists) is True
+          and '$.(researcher-control-status)' == 'executed'
+        )
+      config:
+        action: "search"
+        search-limit: 100
+        search-vector: false
+        search-sorters: ["value.version_control.updated", 1]
+      filters:
+        metadata.content-group: "$.get('content-group', '')"
+        metadata.content-name: "$.get('content-name', '')"
+        metadata.content-topic: "$.get('content-topic', '')"
+      inputs:
+        name: "{'$in': ['web-search', 'web-scraping']}"
+      outputs:
+        researcher-documents: "$.get('documents', [])"
+
+    # mapping-researcher-items
+    - type: mapping
+      name: coverage-mapping-researcher-items
+      condition: |
+        (
+          $.(agenda-exists) is True
+          and '$.(researcher-control-status)' == 'executed'
+        )
+      inputs:
+        _documents: "$.get('researcher-documents', [])"
+      outputs:
+        agenda-control-finished: |
+          (
+            $.(agenda-exists) is True
+            and len($.get('researcher-finished')) > 0
+            and len($.get('researcher-pending')) == 0
+          )
+        have-content-to-process: |
+          (
+            $.(agenda-exists) is True
+            and len($.get('researcher-finished')) > 0
+            and len($.get('researcher-pending')) == 0
+          )
+        researcher-control-status: |
+          (
+            $.(agenda-exists) is True
+            and len($.get('researcher-finished')) > 0
+            and len($.get('researcher-pending')) == 0
+          ) and 'finished' or $.get('researcher-control-status')
+        researcher-items: "$.get('researcher-items', [])"
+        researcher-finished: "len($.get('researcher-finished', []))"
+        researcher-processing: "len($.get('researcher-processing', []))"
+        researcher-pending: "len($.get('researcher-pending', []))"
+        workflow-status: |
+          (
+            $.(agenda-exists) is True
+            and len($.get('researcher-finished')) > 0
+            and len($.get('researcher-pending')) == 0
+          ) and 'executed' or $.get('workflow-status')
+
+    # prompt-coverage-researcher-analysis
+    - type: prompt
+      name: prompt-coverage-researcher-analysis
+      condition: "$.get('have-content-to-process') is True"
+      connector:
+        name: machina-ai
+        command: "invoke_prompt"
+        model: "gpt-4.1"
+      foreach:
+        name: analysis
+        expr: "$"
+        value: "$.get('researcher-items')"
+      inputs:
+        input-content: "$.get('analysis', {}).get('content', [])"
+        instruction: "$.get('script-instructions')"
+      outputs:
+        snippets-bulk: |
+          [
+            {
+              'text': c.get('content', ''),
+              'title': c.get('title', ''),
+              'subject': c.get('subject', ''),
+              'metadata': {
+                'content-group': '$.(content-group)',
+                'content-name': '$.(content-name)',
+                'content-topic': '$.(content-topic)',
+                'event_code': '$.(event_code)'
+              }
+            }
+            for c in $.get('snippets', [])
+          ]
+
+    # save-researcher-snippets
+    - type: document
+      name: save-researcher-snippets
+      condition: "$.get('have-content-to-process') is True"
+      config:
+        action: "bulk-save"
+        embed-vector: true
+        force-update: true
+      connector:
+        name: machina-ai
+        command: "invoke_embedding"
+        model: "text-embedding-3-small"
+      document_name: "'content-snippet'"
+      documents:
+        items: "$.get('parsed-items')"
+      inputs:
+        parsed-items: |
+          [
+            *$.get('snippets-bulk', [])
+          ]
+
+    # document-agenda-control
+    - type: document
+      name: coverage-agenda-control-update
+      condition: "$.get('agenda-exists') is True"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      filters:
+        document_id: "$.get('agenda-document-id')"
+      documents:
+        content-agenda: |
+          {
+            **$.get('agenda-value', {}),
+            'agenda-control': {
+              **$.get('agenda-control', {}),
+              'counter': $.get('agenda-counter', 0) + 1,
+              'finished': $.get('agenda-control-finished', False),
+              'processing': False,
+              'updated': datetime.utcnow()
+            },
+            'researcher-control': {
+              **$.get('researcher-control', {}),
+              'finished': $.get('researcher-finished', 0),
+              'pending': $.get('researcher-pending', 0),
+              'processing': $.get('researcher-processing', 0),
+              'status': $.get('researcher-control-status')
+            }
+          }

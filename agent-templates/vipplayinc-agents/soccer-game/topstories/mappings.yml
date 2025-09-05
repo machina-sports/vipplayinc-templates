@@ -1,0 +1,34 @@
+mappings:
+
+  # coverage-researcher-topstories-searching-map
+  - type: mapping
+    name: coverage-researcher-topstories-searching-map
+    title: "Coverage - Researcher Top Stories Searching Mapping"
+    description: "Mapping data from Soccer Game Top Stories content generation"
+    outputs:
+      version-control: |
+        $.get('_document', {}).get('team-topstories', {}) if $.get('_document') else {}
+      version-control-status: |
+        $.get('_document', {}).get('team-topstories', {}).get('status', 'pending') if $.get('_document') else 'pending'
+      web-search-queries: |
+        [
+          {
+            'metadata': {
+              'content-group': $.get('_metadata', {}).get('content-group', ''),
+              'content-name': $.get('_metadata', {}).get('content-name', ''),
+              'content-topic': $.get('_metadata', {}).get('content-topic', ''),
+              'team_code': $.get('_metadata', {}).get('team_code', '')
+            },
+            'version_control': {
+              'finished': False,
+              'moderated': False,
+              'processing': False,
+              'updated': datetime.utcnow()
+            },
+            'title': f"{$.get('_document', {}).get('agenda-object', {}).get('team_name', '')} top stories",
+            'web-search-udm': $.get('_document', {}).get('agenda-object', {}).get('web-search-udm', 0),
+            'web-search-limit': $.get('_document', {}).get('agenda-object', {}).get('web-search-limit', 4),
+            'web-search-topic': 'topstories',
+            'web-search-query': f"{$.get('_document', {}).get('agenda-object', {}).get('team_name', '')}"
+          }
+        ]

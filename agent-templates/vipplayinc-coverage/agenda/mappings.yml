@@ -1,0 +1,154 @@
+mappings:
+
+  # coverage-mapping-researcher-custom-instruction
+  - type: mapping
+    name: coverage-mapping-researcher-custom-instruction
+    title: "Coverage - Mapping Researcher Custom Instruction"
+    description: "Mapping data from researcher"
+    outputs:
+      researcher-control: |
+        $.get('_document', {}).get('researcher-control', {}) if $.get('_document') else {}
+      researcher-control-status: |
+        $.get('_document', {}).get('researcher-control', {}).get('status', 'pending') if $.get('_document') else 'pending'
+      researcher-control-new-queries: |
+        [
+          {
+            'metadata': {
+              'content-group': $.get('_metadata', {}).get('content-group', ''),
+              'content-name': $.get('_metadata', {}).get('content-name', ''),
+              'content-topic': $.get('_metadata', {}).get('content-topic', ''),
+              'event_code': $.get('_metadata', {}).get('event_code', '')
+            },
+            'researcher-control': {
+              'finished': False,
+              'processing': False,
+              'updated': datetime.utcnow()
+            },
+            'title': item.get('query'),
+            'web-search-udm': $.get('_document', {}).get('agenda-object', {}).get('web-search-udm', 12),
+            'web-search-limit': $.get('_document', {}).get('agenda-object', {}).get('web-search-limit', 10),
+            'web-search-topic': item.get('type'),
+            'web-search-query': item.get('query'),
+          }
+          for item in $.get('_document', {}).get('agenda-object', {}).get('search_queries', [])
+        ]
+
+  # coverage-mapping-researcher-control
+  - type: mapping
+    name: coverage-mapping-researcher-control
+    title: "Coverage - Mapping Researcher Control"
+    description: "Mapping data from researcher"
+    outputs:
+      researcher-control: |
+        $.get('_document', {}).get('researcher-control', {}) if $.get('_document') else {}
+      researcher-control-status: |
+        $.get('_document', {}).get('researcher-control', {}).get('status', 'pending') if $.get('_document') else 'pending'
+      researcher-control-new-queries: |
+        [
+          {
+            'metadata': {
+              'content-group': $.get('_metadata', {}).get('content-group', ''),
+              'content-name': $.get('_metadata', {}).get('content-name', ''),
+              'content-topic': $.get('_metadata', {}).get('content-topic', ''),
+              'event_code': $.get('_metadata', {}).get('event_code', '')
+            },
+            'researcher-control': {
+              'finished': False,
+              'processing': False,
+              'updated': datetime.utcnow()
+            },
+            'web-search-udm': 12,
+            'web-search-limit': 4,
+            'web-search-topic': 'TEAM_RECENT_NEWS',
+            'title': f"(Football) {$.get('_document', {}).get('agenda-object', {}).get('team_perspective', '')} news after:{(datetime.utcnow() - timedelta(days=3)).strftime('%Y-%m-%d')}",
+            'web-search-query': f"(Football) {$.get('_document', {}).get('agenda-object', {}).get('team_perspective', '')} news after:{(datetime.utcnow() - timedelta(days=3)).strftime('%Y-%m-%d')}"
+          },
+          {
+            'metadata': {
+              'content-group': $.get('_metadata', {}).get('content-group', ''),
+              'content-name': $.get('_metadata', {}).get('content-name', ''),
+              'content-topic': $.get('_metadata', {}).get('content-topic', ''),
+              'event_code': $.get('_metadata', {}).get('event_code', '')
+            },
+            'researcher-control': {
+              'finished': False,
+              'processing': False,
+              'updated': datetime.utcnow()
+            },
+            'web-search-udm': 1,
+            'web-search-limit': 2,
+            'web-search-topic': 'TEAM_HISTORIC_ACHIEVEMENTS',
+            'title': f"(Football) {$.get('_document', {}).get('agenda-object', {}).get('team_perspective', '')} historical facts and players in wikipedia",
+            'web-search-query': f"(Football) {$.get('_document', {}).get('agenda-object', {}).get('team_perspective', '')} historical facts and players in wikipedia"
+          }
+        ]
+      researcher-control-queries: |
+        [
+          {
+            'metadata': {
+              'content-group': $.get('_metadata', {}).get('content-group', ''),
+              'content-name': $.get('_metadata', {}).get('content-name', ''),
+              'content-topic': $.get('_metadata', {}).get('content-topic', ''),
+              'event_code': $.get('_metadata', {}).get('event_code', '')
+            },
+            'researcher-control': {
+              'finished': False,
+              'processing': False,
+              'updated': datetime.utcnow()
+            },
+            'web-search-udm': $.get('_document', {}).get('agenda-object', {}).get('web-search-udm', 12),
+            'web-search-limit': $.get('_document', {}).get('agenda-object', {}).get('web-search-limit', 10),
+            'web-search-topic': item.get('type'),
+            'web-search-query': item.get('query'),
+          }
+          for item in $.get('_document', {}).get('agenda-object', {}).get('search_queries', [])
+        ]
+
+  # coverage-mapping-researcher-items
+  - type: mapping
+    name: coverage-mapping-researcher-items
+    title: "Coverage - Mapping Researcher Items"
+    description: "Mapping data from researcher items"
+    outputs:
+      researcher-items: |
+        [
+          {
+            **d.get('value', {}),
+            'metadata': d.get('metadata', {})
+          }
+          for d in $.get('_documents', [])
+          if d.get('name', '') == 'web-scraping'
+        ]
+      researcher-finished: |
+        [
+          item
+          for item in $.get('_documents', [])
+          if item.get('value', {}).get('version_control', {}).get('finished', False) == True
+        ]
+      researcher-processing: |
+        [
+          item
+          for item in $.get('_documents', [])
+          if item.get('value', {}).get('version_control', {}).get('processing', False) == True
+        ]
+      researcher-pending: |
+        [
+          item
+          for item in $.get('_documents', [])
+          if item.get('value', {}).get('version_control', {}).get('finished', False) == False
+        ]
+
+  # coverage-mapping-researcher-service
+  - type: mapping
+    name: coverage-mapping-researcher-service
+    title: "Coverage - Mapping Researcher Service"
+    description: "Mapping data from researcher service"
+    outputs:
+      content-group: |
+        f"{$.('script_name')}"
+      content-name: |
+        f"{$.('date_prefix')}_{$.('script_name')}_{$.('topic_name')}"
+      coverage-indexes: |
+        [
+          f"{$.('date_prefix')}_{$.('script_name')}_{$.('topic_name')}_RESEARCH"
+        ]

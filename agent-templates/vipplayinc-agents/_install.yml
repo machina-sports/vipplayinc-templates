@@ -1,0 +1,241 @@
+setup:
+  title: "VIP Play Inc. - Agents"
+  description: AI-powered agents for VIP Play Inc.
+  category:
+    - special-templates
+  estimatedTime: 15 minutes
+  features:
+    - AI Agent to generate articles, briefings, and snippets.
+    - AI Chat to answer questions about the Tennessee College Football Moderator.
+    - AI Image Generator to generate images for the blog, using a Tennessee College Football match as context.
+  integrations:
+    - sportradar
+  status: available
+  value: "agent-templates/vipplayinc-agents"
+  version: 1.0.0
+
+datasets:
+
+  - type: "mappings"
+    path: "_mappings.yml"
+
+  - type: "prompts"
+    path: "_prompts.yml"
+
+  # reporter images
+
+  - type: "mappings"
+    path: "reporter/images/mappings.yml"
+
+  - type: "prompts" 
+    path: "reporter/images/prompts.yml"
+
+  - type: "workflow"
+    path: "reporter/images/executor.yml"
+
+  # reporter injuries
+
+  - type: "prompts"
+    path: "reporter/injuries/prompts/heading.yml"
+
+  - type: "prompts"
+    path: "reporter/injuries/prompts/next-event.yml"
+
+  - type: "prompts"
+    path: "reporter/injuries/prompts/last-event.yml"
+
+  - type: "prompts"
+    path: "reporter/injuries/prompts/team-injuries.yml"
+
+  - type: "prompts"
+    path: "reporter/injuries/prompts/odds.yml"
+
+  - type: "workflow"
+    path: "reporter/injuries/executor.yml"
+
+  # reporter polls
+
+  - type: "prompts"
+    path: "reporter/polls/prompts.yml"
+
+  - type: "workflow"
+    path: "reporter/polls/executor.yml"
+
+  # reporter quizzes
+
+  - type: "prompts"
+    path: "reporter/quizzes/prompts.yml"
+
+  - type: "workflow"
+    path: "reporter/quizzes/executor.yml"
+
+  # reporter transfers
+
+  - type: "prompts"
+    path: "reporter/transfers/prompts/heading.yml"
+
+  - type: "prompts"
+    path: "reporter/transfers/prompts/next-event.yml"
+
+  - type: "prompts"
+    path: "reporter/transfers/prompts/last-event.yml"
+
+  - type: "prompts"
+    path: "reporter/transfers/prompts/team-transfers.yml"
+
+  - type: "workflow"
+    path: "reporter/transfers/executor.yml"
+
+  # soccer-game researcher
+
+  - type: "mappings"
+    path: "researcher/mappings.yml"
+
+  - type: "prompts"
+    path: "researcher/prompts/reasoning.yml"
+
+  - type: "prompts"
+    path: "researcher/prompts/snippets.yml"
+
+  - type: "prompts"
+    path: "researcher/prompts/stories.yml"
+
+  - type: "workflow"
+    path: "researcher/moderation.yml"
+
+  - type: "workflow"
+    path: "researcher/reasoning.yml"
+
+  - type: "workflow"
+    path: "researcher/searching.yml"
+
+  - type: "workflow"
+    path: "researcher/service.yml"
+
+  - type: "workflow"
+    path: "researcher/snippets.yml"
+
+  - type: "workflow"
+    path: "researcher/stories.yml"
+
+  # soccer-game history
+
+  - type: "mappings"
+    path: "soccer-game/history/mappings.yml"
+
+  # - type: "agent"
+  #   path: "soccer-game/history/consumer.yml"
+
+  # soccer-game injuries
+
+  - type: "mappings"
+    path: "soccer-game/injuries/mappings.yml"
+
+  # # soccer-game moment
+
+  # - type: "mappings"
+  #   path: "soccer-game/moment/mappings.yml"
+
+  # - type: "agent"
+  #   path: "soccer-game/moment/consumer.yml"
+
+  # soccer-game narration
+
+  - type: "prompts"
+    path: "soccer-game/narration/prompts/analysis.yml"
+
+  - type: "prompts"
+    path: "soccer-game/narration/prompts/lineups.yml"
+  
+  - type: "prompts"
+    path: "soccer-game/narration/prompts/polls.yml"
+
+  - type: "workflow"
+    path: "soccer-game/narration/executor.yml"
+
+  - type: "workflow"
+    path: "soccer-game/narration/use-event.yml"
+
+  # soccer-game markets
+
+  - type: "prompts"
+    path: "soccer-game/markets/prompts/analyzer-market.yml"
+
+  - type: "prompts"
+    path: "soccer-game/markets/prompts/game-odds.yml"
+
+  - type: "prompts" 
+    path: "soccer-game/markets/prompts/verify-fixture.yml"
+
+  - type: "workflow"
+    path: "soccer-game/markets/executor.yml"
+
+  # soccer-game standings
+
+  - type: "mappings"
+    path: "soccer-game/standings/mappings.yml"
+
+  - type: "prompts"
+    path: "soccer-game/standings/prompts.yml"
+
+  - type: "workflow"
+    path: "soccer-game/standings/executor.yml"
+
+  # soccer-game statistics
+
+  - type: "mappings"
+    path: "soccer-game/statistics/mappings.yml"
+
+  - type: "prompts"
+    path: "soccer-game/statistics/prompts.yml"
+
+  - type: "workflow"
+    path: "soccer-game/statistics/executor.yml"
+
+  # soccer-game topstories
+
+  - type: "mappings"
+    path: "soccer-game/topstories/mappings.yml"
+
+  # soccer-game transfers
+
+  - type: "mappings"
+    path: "soccer-game/transfers/mappings.yml"
+
+  # runofshow mediapost
+
+  - type: "prompts"
+    path: "runofshow/mediapost/prompts.yml"
+
+  - type: "workflow"
+    path: "runofshow/mediapost/executor.yml"
+
+  # runofshow commercial
+
+  - type: "prompts"
+    path: "runofshow/commercial/prompts.yml"
+
+  - type: "workflow"
+    path: "runofshow/commercial/executor.yml"
+
+  # runofshow graphics
+
+  - type: "prompts"
+    path: "runofshow/graphics/prompts.yml"
+
+  - type: "workflow"
+    path: "runofshow/graphics/executor.yml"
+
+  # consumers
+
+  - type: "agent"
+    path: "consumer-games.yml"
+
+  - type: "agent"
+    path: "consumer-markets.yml"
+
+  - type: "agent"
+    path: "consumer-narration.yml"
+
+  - type: "agent"
+    path: "consumer-research.yml"

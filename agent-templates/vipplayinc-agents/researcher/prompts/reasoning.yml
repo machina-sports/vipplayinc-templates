@@ -1,0 +1,113 @@
+prompts:
+
+  # coverage-researcher-reasoning-prompt
+  - type: prompt
+    name: coverage-researcher-reasoning-prompt
+    title: "Coverage - Researcher Reasoning"
+    description: "Generate an editorial briefing script in English for one selected topic among: history, moment, injuries, transfers, statistics. The reasoning, structure, and search queries must adapt to the received topic."
+    schema:
+      title: "PromptTopicEventIntroductionCoverageGenerator"
+      description: "Generate an editorial briefing script in English tailored to a single topic: team history, current moment/form, injuries, transfers, or statistics. Adapt tone, angle, and suggested searches to the selected topic. All outputs must be in English."
+      required:
+        - title
+        - content
+        - subject
+        - team_name
+        - topic
+        - search_queries
+      type: "object"
+      properties:
+        topic:
+          type: "string"
+          enum:
+            - "history"
+            - "injuries"
+            - "markets"
+            - "moment"
+            - "standings"
+            - "statistics"
+            - "subject"
+            - "transfers"
+            - "topstories"
+          description: "The selected topic. Use it to guide the reasoning and the focus of title, subject, content, and search_queries."
+        content:
+          type: "string"
+          description: |
+            Brief editorial outline in English aligned to the selected topic:
+            - history: analyze rivalry fixture history (previous encounters, memorable matches, head-to-head record, recent results between teams)
+            - injuries: detail injury situation (status, timelines, replacements, tactical impact)
+            - markets: analyze market trends and odds (odds, implied probabilities, market sentiment, key players)
+            - moment: analyze current form (recent results, streaks, tactical trends, key performers)
+            - standings: analyze standings (position, points, goals, etc.)
+            - statistics: highlight key numbers and trends (averages, xG, shots, possession, set-pieces, leaders)
+            - subject: outline subject (custom topic)
+            - transfers: outline market updates (targets, negotiations, confirmed moves, impact)
+            - topstories: outline top stories (injuries, transfers, market updates, etc.)
+        title:
+          type: "string"
+          description: "Engaging title in English reflecting the selected topic (e.g., for history: 'The Rivalry That Shaped An Era'; for moment: 'Current Form Leading to the Clasico'; for injuries: 'Medical Report and Tactical Impact'; for transfers: 'Transfer Market Insights and Next Steps'; for statistics: 'Deep Dive Into Numbers and Trends')."
+        subject:
+          type: "string"
+          description: |
+            Main focus of the coverage in English, adapted to the topic. Examples:
+            - history: "Head-to-head record and recent results between teams"
+            - injuries: "Team absences and probable returns"
+            - markets: "Market trends and odds analysis"
+            - moment: "Last 5 matches and tactical trends"
+            - standings: "Position and points analysis"
+            - statistics: "Key indicators and statistical trends of the fixture"
+            - subject: "Highlighted subject (custom topic)"
+            - transfers: "Active negotiations and squad impact"
+            - topstories: "Analysis of top stories (injuries, transfers, market updates, etc.)"
+        team_name:
+          type: "string"
+          description: "The name of the team"
+        search_queries:
+          type: "array"
+          items:
+            type: "object"
+            required:
+              - title
+              - query
+              - type
+              - source
+            description: |
+              2–3 targeted search queries in English aligned to the selected topic:
+              - history: rivalry fixture details, head-to-head records, recent match results between teams
+              - injuries: medical status, expected returns, official reports
+              - markets: odds, implied probabilities, market sentiment, key players
+              - moment: recent results, current form, tactical trends
+              - standings: positions, points, goals, etc.
+              - statistics: goal averages, xG, shots, possession, set pieces, statistical leaders
+              - subject: "Outline subject (custom topic)"
+              - transfers: speculations, negotiations, confirmations
+              - topstories: "Analysis of top stories (injuries, transfers, market updates, etc.)"
+            minItems: 2
+            maxItems: 3
+            properties:
+              title:
+                type: "string"
+                description: "Title of the search query"
+              query:
+                type: "string"
+                description: |
+                  The actual search query to be executed in English. Should be specific and targeted to the selected topic. Examples:
+                  - history: 'Manchester United vs Manchester City recent matches results head to head derby'
+                  - injuries: 'Liverpool injured players today medical department updates'
+                  - markets: 'Arsenal odds betting bookmakers market analysis'
+                  - moment: 'Chelsea last 5 matches form Pochettino tactics'
+                  - standings: 'Tottenham position points goals table standings'
+                  - statistics: 'Newcastle statistics recent matches xG shots possession set pieces'
+                  - subject: 'Highlighted subject (custom topic)'
+                  - transfers: 'West Ham transfers today negotiations arrivals departures'
+                  - topstories: 'Brighton transfers injuries odds updates'
+              type:
+                type: "string"
+                description: "The type of search being performed. Choose types that match the selected topic."
+              source:
+                type: "string"
+                description: "The source of the search query"
+                enum:
+                  - "WIKIPEDIA"
+                  - "ONEFOOTBALL"
+                  - "GLOBOESPORTE"

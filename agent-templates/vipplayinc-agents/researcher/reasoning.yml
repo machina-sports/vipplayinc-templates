@@ -1,0 +1,238 @@
+workflow:
+
+  name: coverage-researcher-reasoning
+  title: "Coverage - Researcher Reasoning"
+  description: "Workflow to reasoning Soccer Game Researcher content."
+  context-variables:
+    debugger:
+      enabled: false
+    google-genai:
+      api_key: "$TEMP_CONTEXT_VARIABLE_GOOGLE_GENERATIVE_AI_API_KEY"
+    machina-ai:
+      api_key: "$TEMP_CONTEXT_VARIABLE_SDK_OPENAI_API_KEY"
+  inputs:
+    content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+  outputs:
+    workflow-status: |
+      (
+        $.(content-script-exists) is True
+        and '$.(next-topic-to-cover)' != 'NONE_TOPIC_TO_COVER'
+      ) and 'executed' or 'skipped'
+  tasks:
+
+    # load-existing-scripts
+    - type: document
+      name: load-content-scripts
+      config:
+        action: "search"
+        search-limit: 1
+        search-vector: false
+        search-sorters: ["value.agenda-control.updated", 1]
+      filters:
+        metadata.content-group: "$.get('content-group')"
+        '$or': "[{'value.agenda-control.script-generated': {'$exists': False}}, {'value.agenda-control.script-generated': {'$ne': True}}]"
+      inputs:
+        name: "'content-script'"
+      outputs:
+        content-script-agenda: "$.get('documents', [{}])[0].get('agenda-control', {}) if $.get('documents') else None"
+        content-script-counter: "$.get('documents', [{}])[0].get('agenda-control', {}).get('counter', 0) if $.get('documents') else 0"
+        content-script-doc-id: "$.get('documents', [{}])[0].get('_id', '') if $.get('documents') else ''"
+        content-script-exists: "len($.get('documents', [])) > 0 if $.get('documents') else False"
+        content-script-metadata: "$.get('documents', [{}])[0].get('metadata', {}) if $.get('documents') else None"
+        content-script-required: "$.get('documents', [{}])[0].get('value', {}).get('agenda-required', []) if $.get('documents') else []"
+        content-script-value: "$.get('documents', [{}])[0].get('value', {}) if $.get('documents') else None"
+        topics-indexes: "$.get('documents', [{}])[0].get('value', {}).get('indexes', []) if $.get('documents') else []"
+
+    # load-existing-agendas
+    - type: document
+      name: load-existing-agendas
+      condition: "$.get('content-script-exists') is True"
+      connector:
+        name: "machina-ai"
+        command: "invoke_embedding"
+        model: "text-embedding-3-small"
+      config:
+        action: "search"
+        search-limit: 100
+        search-vector: false
+        search-sorters: ["value.agenda-control.updated", 1]
+      filters:
+        metadata.content-group: "$.get('content-script-metadata', {}).get('content-group')"
+        metadata.content-name: "$.get('content-script-metadata', {}).get('content-name')"
+        metadata.event_code: "$.get('content-script-metadata', {}).get('event_code')"
+      inputs:
+        name: "'content-agenda'"
+      outputs:
+        topics-covered: |
+          [
+            d.get('metadata', {}).get('content-topic')
+            for d in $.get('documents', [])
+          ]
+        
+    # map-next-topic-to-cover
+    - type: mapping
+      name: coverage-mapping-agenda-script-object
+      condition: |
+        (
+          '$.(next-topic-to-cover)' != 'NONE_TOPIC_TO_COVER'
+          and $.(content-script-exists) is True
+        )
+      inputs:
+        content-script-metadata: "$.get('content-script-metadata')"
+        topics-covered: "$.get('topics-covered', [])"
+        topics-indexes: "$.get('topics-indexes', [])"
+      outputs:
+        content-group: "$.get('content-group', '')"
+        content-name: "$.get('content-name', '')"
+        event_code: "$.get('event_code', '')"
+        team_code: "$.get('next-topic-to-cover', {}).get('team_code', '')"
+        team_name: "$.get('next-topic-to-cover', {}).get('team_name', '')"
+        next-topic-description: "$.get('next-topic-to-cover', {}).get('description', '')"
+        next-topic-to-cover: "$.get('next-topic-to-cover', {}).get('index', '')"
+        new-agenda-object: |
+          {
+            'agenda-control': {
+              'counter': 0,
+              'processing': True
+            },
+            'agenda-required': $.(content-script-required),
+            'title': '$.(next-topic-to-cover)',
+            'status': 'active'
+          }
+
+    # save-new-agenda
+    - type: document
+      name: create-new-agenda
+      condition: |
+        (
+          '$.(next-topic-to-cover)' != 'NONE_TOPIC_TO_COVER'
+          and $.(content-script-exists) is True
+        )
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      documents:
+        content-agenda: "$.get('new-agenda-object')"
+      metadata:
+        content-group: "$.get('content-group')"
+        content-name: "$.get('content-name')"
+        content-topic: "$.get('next-topic-to-cover')"
+        event_code: "$.get('event_code')"
+
+    # load-new-agenda
+    - type: document
+      name: load-new-agenda
+      condition: |
+        (
+          '$.(next-topic-to-cover)' != 'NONE_TOPIC_TO_COVER'
+          and $.(content-script-exists) is True
+        )
+      config:
+        action: "search"
+        search-limit: 1
+        search-vector: false
+      filters:
+        metadata.content-group: "$.get('content-group')"
+        metadata.content-name: "$.get('content-name')"
+        metadata.content-topic: "$.get('next-topic-to-cover')"
+        metadata.event_code: "$.get('event_code')"
+      inputs:
+        name: "'content-agenda'"
+      outputs:
+        content-agenda-doc-id: "$.get('documents', [{}])[0].get('_id', '') if $.get('documents') else ''"
+        content-agenda-control: "$.get('documents', [{}])[0].get('agenda-control', {}) if $.get('documents') else None"
+        content-agenda-exists: "len($.get('documents', [])) > 0 if $.get('documents') else False"
+        content-agenda-value: "$.get('documents', [{}])[0].get('value', {}) if $.get('documents') else None"
+
+    # # load-team-by-code
+    # - type: document
+    #   name: load-team-by-code
+    #   condition: "$.get('team_code') is not None and $.get('content-script-exists') is True"
+    #   config:
+    #     action: "search"
+    #     search-limit: 1
+    #     search-vector: false
+    #     search-sorters: ["value.start_time", 1]
+    #   filters:
+    #     metadata.team_code: "$.get('team_code')"
+    #   inputs:
+    #     name: "{'$in': ['soccer-team']}"
+    #   outputs:
+    #     team-exists: "len($.get('documents', [])) > 0 if $.get('documents') else False"
+    #     team-metadata: "$.get('documents')[0].get('metadata', {}) if $.get('documents') else None"
+    #     team-name: "$.get('documents')[0].get('value', {}).get('short_name', '') if $.get('documents') else ''"
+    #     team-value: "$.get('documents')[0].get('value', {}) if $.get('documents') else None"
+
+    # prompt-reasoning
+    - type: prompt
+      name: coverage-researcher-reasoning-prompt
+      condition: |
+        (
+          '$.(next-topic-to-cover)' != 'NONE_TOPIC_TO_COVER'
+          and $.(content-script-exists) is True
+        )
+      connector:
+        name: "google-genai"
+        command: "invoke_prompt"
+        model: "gemini-2.5-pro"
+      inputs:
+        input-selected-topic: "$.get('next-topic-to-cover')"
+      outputs:
+        output-agenda-object: "$"
+
+    # update-new-agenda
+    - type: document
+      name: update-new-agenda
+      condition: |
+        (
+          '$.(next-topic-to-cover)' != 'NONE_TOPIC_TO_COVER'
+          and $.(content-script-exists) is True
+        )
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      filters:
+        document-id: "$.get('content-agenda-doc-id')"
+      documents:
+        content-agenda: |
+          {
+            **$.get('content-agenda-value', {}),
+            'agenda-control': {
+              **$.get('content-agenda-control', {}),
+              'processing': False,
+              'updated': datetime.utcnow()
+            },
+            'agenda-object': {
+              **$.get('output-agenda-object', {}),
+              'team_code': $.get('team_code')
+            }
+          }
+      metadata:
+        content-group: "$.get('content-group')"
+        content-name: "$.get('content-name')"
+        content-topic: "$.get('next-topic-to-cover')"
+        event_code: "$.get('event_code')"
+
+    # content-script-control-update 
+    - type: document
+      name: content-script-control-update
+      condition: "$.get('content-script-exists') is True"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      filters:
+        document_id: "$.get('content-script-doc-id')"
+      documents:
+        content-script: |
+          {
+            **$.get('content-script-value', {}),
+            'agenda-control': {
+              **$.get('content-script-agenda', {}),
+              'counter': $.get('content-script-counter', 0) + (1 if '$.(next-topic-to-cover)' != 'NONE_TOPIC_TO_COVER' else 0),
+              'updated': datetime.utcnow(),
+              'script-generated': '$.(next-topic-to-cover)' == 'NONE_TOPIC_TO_COVER' or $.get('content-script-agenda', {}).get('script-generated', False)
+            }
+          }

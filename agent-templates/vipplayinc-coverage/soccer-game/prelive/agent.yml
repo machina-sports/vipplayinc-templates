@@ -1,0 +1,44 @@
+agent:
+
+  name: coverage-event-prelive-agent
+  title: "Coverage - Prelive Introduction"
+  description: "Workflow to introduce event."
+  context:
+    config-frequency: 0.2
+  workflows:
+
+    # # coverage Prelive Introduction service
+    # - name: "coverage-event-prelive-service"
+    #   description: "Coverage Prelive Introduction Service"
+    #   outputs:
+    #     event-prelive-service-status: "$.get('workflow-status', False)"
+
+    # coverage Prelive Introduction reasoning
+    - name: "coverage-event-prelive-reasoning"
+      description: "Coverage Prelive Introduction Reasoning"
+      outputs:
+        event-prelive-reasoning-status: "$.get('workflow-status', False)"
+
+    # coverage Prelive Introduction executor searching
+    - name: "coverage-event-prelive-executor-searching"
+      description: "Coverage Prelive Introduction Executor Searching"
+      outputs:
+        event-prelive-executor-searching-status: "$.get('workflow-status', False)"
+
+    # coverage Prelive Introduction executor moderation
+    - name: "coverage-event-prelive-executor-moderation"
+      description: "Coverage Prelive Introduction Executor Moderation"
+      outputs:
+        event-prelive-executor-moderation-status: "$.get('workflow-status', False)"
+
+    # coverage Prelive Introduction executor snippets
+    - name: "coverage-event-prelive-executor-snippets"
+      description: "Coverage Prelive Introduction Executor Snippets"
+      outputs:
+        event-prelive-executor-snippets-status: "$.get('workflow-status', False)"
+  
+    # coverage Prelive Introduction executor interactive
+    - name: "coverage-event-prelive-executor-interactive"
+      description: "Coverage Prelive Introduction Executor Interactive"
+      outputs:
+        event-prelive-executor-interactive-status: "$.get('workflow-status', False)"

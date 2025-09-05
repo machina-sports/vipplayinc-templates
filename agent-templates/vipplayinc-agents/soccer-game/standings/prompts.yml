@@ -1,0 +1,62 @@
+prompts:
+
+  # coverage-researcher-standings-prompt
+  - type: prompt
+    name: coverage-researcher-standings-prompt
+    title: "Coverage - Researcher Standings Prompt"
+    description: "Generate structured analysis snippets focusing on a team's performance in the league table (TOTAL standings)"
+    instruction: |
+      Generate structured analysis snippets focusing on a team's performance in the league table (TOTAL standings).
+      Use the following executor inputs when crafting the analysis:
+      - competition_title: Competition name
+      - data_generated_at: Data timestamp (GMT-3)
+      - stage_info_summary: Stage summary string (phase, type, year, start, end)
+      - standings_top10: Top-10 teams compact summary
+      - standings_bottom10: Bottom-10 teams compact summary
+      - team_summary: Selected team compact summary (rank, points, record, goals, form, outcome)
+      - team_rank, team_points, team_points_per_game, team_goals_for, team_goals_against, team_goals_diff, team_form
+    schema:
+      title: "SoccerStandings"
+      description: "Analysis structure for team performance in their standings in soccer context"
+      type: "object"
+      properties:
+        snippets:
+          type: "array"
+          description: |
+            Analysis snippets based on TOTAL league standings context, focusing on the selected team's position and trajectory
+          items:
+            type: "object"
+            properties:
+              title:
+                type: "string"
+                description: "Title of the standings analysis"
+              content:
+                type: "string"
+                description: |
+                  Standings analysis focusing on the team's position and momentum in the TOTAL table:
+                  1) Context:
+                     - Competition: use competition_title
+                     - Data timestamp: use data_generated_at (GMT-3)
+                  2) Table overview:
+                     - Present standings_top5 succinctly
+                     - Highlight gaps between adjacent positions when relevant
+                  3) Team focus:
+                     - Use team_summary for compact overview (rank, points, record, goals, form, outcome)
+                     - Add short commentary using team_rank, team_points_per_game, team_goals_diff
+                  4) Narrative:
+                     - Keep 2-4 concise paragraphs connecting form and table position
+                  5) Formatting:
+                     - Numbers with proper decimal places
+                     - Dates: DD/MM/YYYY, Time: HH:MM (24h)
+                  Example Output (English):
+                  "[Team]: standings overview (Total) — [Competition]
+                  Updated on [date] at [time] (GMT-3). Top-5: [standings_top5].
+                  [Team] occupies [position]th place with [points] points (PPG [ppg]), record [W]-[D]-[L] and goal difference [gd]. Recent form: [form].
+                  Regarding direct rivals, the gap up/down is manageable and can be reduced with [competitive path summary]."
+              subject:
+                type: "string"
+                description: "Please provide a brief and concise context to situate this standings snippet within the general match analysis to improve snippet search retrieval. Respond only with the concise context and nothing else."
+            required: ["title", "content", "subject"]
+          minItems: 1
+          maxItems: 10
+      required: ["snippets"]

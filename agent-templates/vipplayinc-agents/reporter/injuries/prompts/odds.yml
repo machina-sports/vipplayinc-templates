@@ -1,0 +1,30 @@
+prompts:
+
+  # coverage-reporter-injuries-odds-prompt
+  - type: "prompt"
+    title: "Coverage - Reporter Injuries Odds"
+    name: "coverage-reporter-injuries-odds-prompt"
+    description: "Gera a seção sobre as odds do jogo, com título dinâmico e texto baseado no contexto."
+    instruction: |
+      Escreva em tom jornalístico, fluido e natural, em parágrafo corrido (sem cabeçalhos como "Odds" e sem listas).
+      - Título: manchete curta e natural (até 10 palavras), sem fórmula fixa. Realce o ângulo principal das odds: favoritismo (favorito/azarão), valor no empate, ou tendência no mercado de gols (under/over 2,5), apenas se constar no contexto.
+      - Texto: apresente as principais cotações do confronto (favorito, empate e adversário) e, se houver, o mercado de gols com sua leitura (ex.: tendência de poucos gols). Seja direto.
+      Não invente informações. Não use emojis. Priorize clareza e concisão.
+    schema:
+      title: "PostBlogOdds"
+      description: "Estrutura para relatar as odds do jogo."
+      type: "object"
+      properties:
+        section_title:
+          type: "string"
+          description: "Título curto e natural (até 10 palavras), sem fórmula fixa. Destaque o ângulo principal (favoritismo, tendência de gols ou valor no empate/azarão), conforme o contexto."
+        section_content:
+          type: "string"
+          description: |
+            1 parágrafo, até 100 palavras, tom jornalístico e natural.
+            Sem listas e sem cabeçalhos. Deve:
+            - Apresentar as principais odds (favorito, empate e adversário)
+            - Incluir, se houver no contexto, o mercado de gols (over/under) e a leitura dominante (ex.: tendência de poucos gols)
+      required:
+        - section_title
+        - section_content

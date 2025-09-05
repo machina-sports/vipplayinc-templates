@@ -1,0 +1,238 @@
+mappings:
+
+  # coverage-mapping-agenda-control
+  - type: mapping
+    name: coverage-mapping-agenda-control
+    title: "Coverage - Mapping Agenda Control"
+    description: "Mapping data from agenda"
+    outputs:
+      agenda-control: |
+        $.get('_document', {}).get('agenda-control', {}) if $.get('_document') else {}
+      agenda-counter: |
+        $.get('_document', {}).get('agenda-control', {}).get('counter', 0) if $.get('_document') else 0
+      custom-instruction: |
+        $.get('_document', {}).get('agenda-object', {}).get('custom_instruction', '') if $.get('_document') else ''
+      custom-level: |
+        $.get('_document', {}).get('agenda-object', {}).get('custom_level', '') if $.get('_document') else ''
+      custom-script-name: |
+        $.get('_document', {}).get('agenda-object', {}).get('custom_script_name', '') if $.get('_document') else ''
+      custom-topic: |
+        $.get('_document', {}).get('agenda-object', {}).get('custom_topic', '') if $.get('_document') else ''
+      content-group: |
+        $.get('_metadata', {}).get('content-group', '')
+      content-name: |
+        $.get('_metadata', {}).get('content-name', '')
+      content-topic: |
+        $.get('_metadata', {}).get('content-topic', '')
+      event_code: |
+        $.get('_metadata', {}).get('event_code', '')
+      team_code: |
+        $.get('_document', {}).get('agenda-object', {}).get('team_code', '') if $.get('_document') else ''
+      script-code: |
+        $.get('_document', {}).get('agenda-object', {}).get('script_code', '') if $.get('_document') else ''
+      script-instructions: |
+        $.get('_document', {}).get('agenda-object', {}).get('content', '') if $.get('_document') else ''
+
+  # coverage-mapping-agenda-script
+  - type: mapping
+    name: coverage-mapping-agenda-script
+    title: "Coverage - Mapping Agenda Script"
+    description: "Mapping data from agenda"
+    outputs:
+      content-group: "$.get('content-script-metadata', {}).get('content-group', '')"
+      content-name: "$.get('content-script-metadata', {}).get('content-name', '')"
+      event_code: "$.get('content-script-metadata', {}).get('event_code', '')"
+      next-topic-to-cover: |
+        'NONE_TOPIC_TO_COVER' if not $.get('topics-indexes', []) else (
+          [
+            script
+            for script in $.get('topics-indexes', [])
+            if script not in $.get('topics-covered', [])
+          ][0] if [
+            script
+            for script in $.get('topics-indexes', [])
+            if script not in $.get('topics-covered', [])
+          ] else 'NONE_TOPIC_TO_COVER'
+        )
+
+  # coverage-mapping-agenda-script-object
+  - type: mapping
+    name: coverage-mapping-agenda-script-object
+    title: "Coverage - Mapping Agenda Script Object"
+    description: "Mapping data from agenda script"
+    outputs:
+      content-group: "$.get('content-script-metadata', {}).get('content-group', '')"
+      content-name: "$.get('content-script-metadata', {}).get('content-name', '')"
+      event_code: "$.get('content-script-metadata', {}).get('event_code', '')"
+      team_code: "$.get('content-script-metadata', {}).get('team_code', '')"
+      next-topic-to-cover: |
+        {'index': 'NONE_TOPIC_TO_COVER', 'description': ''} if not $.get('topics-indexes', []) else (
+          [
+            topic
+            for topic in $.get('topics-indexes', [])
+            if topic.get('index', '') not in $.get('topics-covered', [])
+          ][0] if [
+            topic
+            for topic in $.get('topics-indexes', [])
+            if topic.get('index', '') not in $.get('topics-covered', [])
+          ] else {'index': 'NONE_TOPIC_TO_COVER', 'description': ''}
+        )
+
+  # coverage-mapping-date-prefix
+  - type: mapping
+    name: coverage-mapping-date-prefix
+    title: "Coverage - Mapping Agenda Prefixes"
+    description: "Mapping data from agenda service"
+    outputs:
+      date_prefix: f"{datetime.utcnow().strftime('%m%d%M%S')}"
+
+  # coverage-mapping-snippets-results
+  - type: mapping
+    name: coverage-mapping-snippets-results
+    title: "Coverage - Mapping Snippets Results"
+    description: "Mapping data from snippets results"
+    outputs:
+      next-story-to-be-verified: |
+        next(
+          (
+            item
+            for item in $.get('_documents', [])
+            if (
+              item.get('value', {}).get('version_control', {}).get('story-verified', False) == False
+              and item.get('value', {}).get('version_control', {}).get('finished', False) == False
+            )
+          ),
+          None
+        )
+      stories-snippets-not-verified: |
+        [
+          item
+          for item in $.get('_documents', [])
+          if item.get('value', {}).get('version_control', {}).get('story-verified', False) == False
+        ]
+      stories-snippets-not-verified-count: |
+        len([
+          item
+          for item in $.get('_documents', [])
+          if item.get('value', {}).get('version_control', {}).get('story-verified', False) == False
+        ])
+      stories-snippets-verified: |
+        [
+          item
+          for item in $.get('_documents', [])
+          if item.get('value', {}).get('version_control', {}).get('story-verified', False) == True
+        ]
+
+  # coverage-mapping-websearch-results
+  - type: mapping
+    name: coverage-mapping-websearch-results
+    title: "Coverage - Mapping Web Search Results"
+    description: "Mapping data from web search results"
+    outputs:
+      snippets-with-content: |
+        [
+          item
+          for item in $.get('_documents', [])
+          if item.get('value', {}).get('content', []) is not None
+          and len(item.get('value', {}).get('content', [])) > 0
+          and item.get('name', '') == "web-scraping"
+        ]
+      web-search-items: |
+        [
+          {
+            **d.get('value', {}),
+            'metadata': d.get('metadata', {})
+          }
+          for d in $.get('_documents', [])
+          if d.get('name', '') == 'web-scraping'
+        ]
+      web-search-finished: |
+        [
+          item
+          for item in $.get('_documents', [])
+          if item.get('value', {}).get('version_control', {}).get('finished', False) == True
+        ]
+      web-search-processing: |
+        [
+          item
+          for item in $.get('_documents', [])
+          if item.get('value', {}).get('version_control', {}).get('processing', False) == True
+        ]
+      web-search-pending: |
+        [
+          item
+          for item in $.get('_documents', [])
+          if item.get('value', {}).get('version_control', {}).get('finished', False) == False
+        ]
+      web-search-unmoderated: |
+        [
+          item
+          for item in $.get('_documents', [])
+          if (
+            item.get('name', '') == 'web-search'
+            and item.get('value', {}).get('version_control', {}).get('moderated', False) == False
+          )
+        ]
+      web-search-next-to-be-moderated-count: |
+        [
+          item
+          for item in $.get('_documents', [])
+          if (
+            item.get('name', '') == 'web-search'
+            and item.get('value', {}).get('version_control', {}).get('moderated', False) == False
+            and item.get('value', {}).get('version_control', {}).get('finished', False) == True
+          )
+        ]
+      web-search-next-to-be-moderated: |
+        next(
+          (
+            item
+            for item in $.get('_documents', [])
+            if (
+              item.get('name', '') == 'web-search'
+              and item.get('value', {}).get('version_control', {}).get('moderated', False) == False
+              and item.get('value', {}).get('version_control', {}).get('finished', False) == True
+            )
+          ),
+          None
+        )
+
+  # coverage-mapping-sportradar-soccer
+  - type: mapping
+    name: coverage-mapping-sportradar-soccer
+    title: "Coverage - Mapping Sportradar Soccer"
+    description: "Mapping data from sportradar soccer data"
+    outputs:
+      article_count: "$.get('event_selected', {}).get('version_control', {}).get('article_count', 0)"
+      competition_id: "$.get('event_selected', {}).get('sport_event', {}).get('sport_event_context', {}).get('competition', {}).get('id')"
+      competition_name: "$.get('event_selected', {}).get('sport_event', {}).get('sport_event_context', {}).get('competition', {}).get('name')"
+      event_code: "$.get('event_selected', {}).get('sport_event', {}).get('id')"
+      event_date: "$.get('event_selected', {}).get('start_time').strftime('%Y-%m-%d')"
+      event_date_brt: "$.get('event_selected', {}).get('start_time_brt')"
+      event_days_ago: |
+        ($.get('event_selected', {}).get('start_time') - timedelta(days=1)).strftime('%Y-%m-%d')
+      event_day_before: |
+        ($.get('event_selected', {}).get('start_time') - timedelta(days=1)).strftime('%Y-%m-%d')
+      event_day_of_week: "$.get('event_selected', {}).get('start_time').strftime('%A')"
+      event_date_time: "$.get('event_selected', {}).get('start_time').strftime('%Y-%m-%d %H:%M')"
+      image_count: "$.get('event_selected', {}).get('version_control', {}).get('image_count', 0)"
+      research_news_count: "$.get('event_selected', {}).get('version_control', {}).get('research_news_count', 0)"
+      research_odds_count: "$.get('event_selected', {}).get('version_control', {}).get('research_odds_count', 0)"
+      research_stats_count: "$.get('event_selected', {}).get('version_control', {}).get('research_stats_count', 0)"
+      research_team_count: "$.get('event_selected', {}).get('version_control', {}).get('research_team_count', 0)"
+      season: "$.get('event_selected', {}).get('sport_event', {}).get('sport_event_context', {}).get('season', {}).get('id')"
+      season_title: "$.get('event_selected', {}).get('sport_event', {}).get('sport_event_context', {}).get('season', {}).get('name')"
+      team_home_name: "$.get('event_selected', {}).get('sport_event', {}).get('competitors', [])[0].get('name')"
+      team_away_name: "$.get('event_selected', {}).get('sport_event', {}).get('competitors', [])[1].get('name')"
+      team_home_id: "$.get('event_selected', {}).get('sport_event', {}).get('competitors', [])[0].get('id')"
+      team_away_id: "$.get('event_selected', {}).get('sport_event', {}).get('competitors', [])[1].get('id')"
+      title: "$.get('event_selected', {}).get('title')"
+      widget-match-embed: "$.get('event_selected', {}).get('widget-match-embed')"
+      venue_title: f"{$.get('event_selected', {}).get('sport_event', {}).get('venue', {}).get('name')} ({$.get('event_selected', {}).get('sport_event', {}).get('venue', {}).get('city_name')}, {$.get('event_selected', {}).get('sport_event', {}).get('venue', {}).get('country_name')})"
+      venue_capacity: "$.get('event_selected', {}).get('sport_event', {}).get('venue', {}).get('capacity')"
+      venue_city: "$.get('event_selected', {}).get('sport_event', {}).get('venue', {}).get('city')"
+      venue_country: "$.get('event_selected', {}).get('sport_event', {}).get('venue', {}).get('country')"
+      venue_id: "$.get('event_selected', {}).get('sport_event', {}).get('venue', {}).get('id')"
+      venue_map_coordinates: "$.get('event_selected', {}).get('sport_event', {}).get('venue', {}).get('map_coordinates')"
+      venue_name: "$.get('event_selected', {}).get('sport_event', {}).get('venue', {}).get('name')"
+      venue_timezone: "$.get('event_selected', {}).get('sport_event', {}).get('venue', {}).get('timezone')"

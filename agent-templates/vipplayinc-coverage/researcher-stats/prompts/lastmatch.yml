@@ -1,0 +1,158 @@
+prompts:
+
+  # prompt-coverage-researcher-stats-lastmatch
+  - type: prompt
+    name: prompt-coverage-researcher-stats-lastmatch
+    title: "Coverage - Researcher Stats Last Match"
+    description: "Generate structured analysis snippets focusing on a team's performance in their last match"
+    schema:
+      title: "SoccerLastMatch"
+      description: "Analysis structure for team performance in their last match in Brazilian soccer context"
+      type: "object"
+      properties:
+        key_players:
+          type: "array"
+          description: "Summary of key players' performances in the match"
+          items:
+            type: "object"
+            properties:
+              title:
+                type: "string"
+                enum: [
+                  "[Team Name]'s Match Result Overview",
+                  "[Team Name]'s Attacking Players Performance",
+                  "[Team Name]'s Defensive Players Performance",
+                  "[Team Name]'s Midfield Players Performance",
+                  "[Team Name]'s Complete Lineup Analysis"
+                ]
+              content:
+                type: "string"
+                description: |
+                  Data-driven analysis of key players' performances using available statistics:
+                  
+                  Available Statistics for Each Player:
+                  1. Match Status:
+                     - starter (true/false)
+                     - substituted_in (minute)
+                     - substituted_out (minute)
+                  
+                  2. Attacking Statistics:
+                     - goals_scored
+                     - assists
+                     - shots_on_target
+                     - shots_off_target
+                     - shots_blocked
+                  
+                  3. Set Pieces:
+                     - corner_kicks
+                  
+                  4. Discipline:
+                     - yellow_cards
+                     - yellow_red_cards
+                     - red_cards
+                     - offsides
+                     - own_goals
+                  
+                  Structure Requirements:
+                  1. Start with match result and score
+                  2. Focus on players with notable statistics (goals, shots, cards)
+                  3. Each player mention must include:
+                     - Starter/substitute status
+                     - At least 2 relevant statistics
+                     - Substitution time if applicable
+                  4. Maximum 4 paragraphs
+                  5. For Complete Lineup Analysis:
+                     - List all starters in formation order
+                     - Include all substitutions with times
+                     - Highlight any formation changes
+                  
+                  Example Format:
+                  "Match Result: Team A 2-0 Team B
+                  
+                  Attacking Players:
+                  Player X (starter, 90 minutes):
+                  - 2 shots on target, 2 shots off target
+                  - 1 yellow card
+                  
+                  Defensive Players:
+                  Player Y (substituted at 75'):
+                  - 1 goal scored
+                  - 1 assist
+                  
+                  Complete Lineup:
+                  Starters: Player A, Player B, Player C...
+                  Substitutions: Player D (65'), Player E (75')"
+              subject:
+                type: "string"
+                description: "Por favor, forneça um contexto breve e sucinto para situar este snippet de odds dentro da análise geral da partida com o propósito de melhorar a recuperação de busca do snippet. Responda apenas com o contexto sucinto e nada mais."
+              questions:
+                type: "string"
+                description: "Perguntas potenciais sobre odds e apostas que poderiam ser respondidas com o conteúdo deste snippet."
+            required: ["title", "content", "subject", "questions"]
+          minItems: 1
+          maxItems: 10
+        snippets:
+          type: "array"
+          description: "Analysis snippets based on statistical categories, focusing on team performance in their last match"
+          items:
+            type: "object"
+            properties:
+              title:
+                type: "string"
+                enum: [
+                  "[Team Name]'s Last Match Overview",
+                  "[Team Name]'s Attacking Performance",
+                  "[Team Name]'s Possession Control",
+                  "[Team Name]'s Defensive Performance",
+                  "[Team Name]'s Set Piece Effectiveness",
+                  "[Team Name]'s Passing Efficiency",
+                  "[Team Name]'s Counter Attack Success",
+                  "[Team Name]'s Disciplinary Record"
+                ]
+              content:
+                type: "string"
+                description: |
+                  Statistical analysis focusing on the team's performance in their last match:
+                  
+                  Match Information:
+                  - Venue: home_team, away_team, stadium_name
+                  - Competition: competition_name, season_name, round_number
+                  - Date: match_date, kickoff_time
+                  
+                  Available Statistics:
+                  - Possession: ball_possession (percentage)
+                  - Shots: shots_total, shots_on_target, shots_off_target, shots_blocked, shots_saved
+                  - Set Pieces: corner_kicks, free_kicks, goal_kicks, throw_ins
+                  - Discipline: fouls, offsides, yellow_cards, red_cards, yellow_red_cards
+                  
+                  Requirements:
+                  1. Use exact numbers from the available statistics
+                  2. Avoid generic statements - use specific data points
+                  3. Maximum 3 sentences per snippet
+                  4. Avoid repeating information across different snippets
+                  5. Use proper name formatting:
+                     - Include proper accents (á, é, í, ó, ú, ã, õ, ç)
+                     - Remove unnecessary suffixes (FC, SC, CE, etc.)
+                     - Use official team names without abbreviations
+                  6. Format dates and times:
+                     - Use DD/MM/YYYY format for dates
+                     - Use 24-hour format for times (HH:MM)
+                     - Include timezone when relevant
+                  7. Format venues and cities:
+                     - Include proper accents in city and stadium names
+                     - Use full stadium names without abbreviations
+                     - Include city name after stadium when relevant
+                  8. Format competition names:
+                     - Use official competition names
+                     - Include proper accents
+                     - Use full season format (e.g., "Brasileiro Série A 2024")
+              subject:
+                type: "string"
+                description: "Por favor, forneça um contexto breve e sucinto para situar este snippet de odds dentro da análise geral da partida com o propósito de melhorar a recuperação de busca do snippet. Responda apenas com o contexto sucinto e nada mais."
+              questions:
+                type: "string"
+                description: "Perguntas potenciais sobre odds e apostas que poderiam ser respondidas com o conteúdo deste snippet."
+            required: ["title", "content", "subject", "questions"]
+          minItems: 1
+          maxItems: 10
+      required: ["snippets", "key_players"]

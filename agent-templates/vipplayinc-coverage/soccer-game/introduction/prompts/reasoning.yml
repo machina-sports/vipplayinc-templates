@@ -1,0 +1,78 @@
+prompts:
+
+  # coverage-event-introduction-reasoning-prompt
+  - type: prompt
+    name: coverage-event-introduction-reasoning-prompt
+    title: "Coverage - Event Introduction Reasoning"
+    description: "Generate editorial briefing script for planning event introduction content based on a specific topic, competition, or subject matter"
+    schema:
+      title: "PromptTopicEventIntroductionCoverageGenerator"
+      description: "Generate editorial briefing script for planning event introduction coverage based on a specific topic, which can be historical matches, competition trivia, legendary players, or general football history"
+      required:
+        - title
+        - content
+        - subject
+        - search_queries
+      type: "object"
+      properties:
+        content:
+          type: "string"
+          description: "Brief editorial outline highlighting key focus points and angles for the topic coverage, including specific areas to research and data points to gather"
+        title:
+          type: "string"
+          description: "Engaging title that clearly represents the topic or subject being researched"
+        subject:
+          type: "string"
+          description: "Main focus of the coverage (e.g., 'UEFA Nations League statistics analysis', 'Premier League top scorers history', 'Champions League knockout records')"
+        search_queries:
+          type: "array"
+          items:
+            type: "object"
+            required:
+              - title
+              - query
+              - type
+              - source
+            description: "List of search queries with their types to gather comprehensive information about the topic, 5-8 queries to cover different aspects"
+            minItems: 2
+            maxItems: 3
+            properties:
+              title:
+                type: "string"
+                description: "Title of the search query"
+              query:
+                type: "string"
+                description: |
+                  The actual search query to be executed. Should be specific and targeted to the research topic. Examples:
+                  - For competitions: 'UEFA Nations League top scorers all time statistics'
+                  - For historical data: 'Champions League most goals single season records'
+                  - For team analysis: 'Manchester United Premier League titles history 1990s'
+                  - For player stats: 'Cristiano Ronaldo international goals Portugal records'
+              type:
+                type: "string"
+                enum:
+                  - "COMPETITION_STATISTICS"
+                  - "HISTORICAL_RECORDS"
+                  - "TEAM_RECENT_FORM"
+                  - "TEAM_INJURY_NEWS"
+                  - "TEAM_MANAGER_QUOTES"
+                  - "HEAD_TO_HEAD_HISTORY"
+                  - "TEAM_KEY_PLAYERS"
+                  - "TEAM_COMPETITION_HISTORY"
+                  - "TEAM_LEGENDARY_PLAYERS"
+                  - "PLAYER_COMPETITION_STATS"
+                  - "PLAYER_CAREER_HIGHLIGHTS"
+                  - "TEAM_GOLDEN_ERA"
+                  - "TEAM_HISTORIC_ACHIEVEMENTS"
+                  - "TOURNAMENT_FORMAT_RULES"
+                  - "CURRENT_STANDINGS"
+                  - "TOP_PERFORMERS"
+                  - "RECORD_BREAKERS"
+                description: "The type of search being performed"
+              source:
+                type: "string"
+                description: "The source of the search query"
+                enum:
+                  - "WIKIPEDIA"
+                  - "ONEFOOTBALL"
+                  - "GLOBOESPORTE"

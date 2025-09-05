@@ -1,0 +1,136 @@
+mappings:
+
+  # coverage-mapping-images-control
+  - type: mapping
+    name: coverage-mapping-images-control
+    title: "Coverage - Mapping Images Control"
+    description: "Mapping data from images"
+    outputs:
+      agenda-required: |
+        $.get('_document', {}).get('agenda-required', []) if $.get('_document') else []
+      images-control: |
+        $.get('_document', {}).get('images-control', {}) if $.get('_document') else {}
+      images-control-status: |
+        $.get('_document', {}).get('images-control', {}).get('status', 'pending') if $.get('_document') else 'pending'
+      websearch-request: |
+        $.get('_document', {}).get('websearch-request', {}) if $.get('_document') else {}
+      websearch-request-status: |
+        $.get('_document', {}).get('websearch-request', {}).get('status', 'pending') if $.get('_document') else 'pending'
+      websearch-request-queries: |
+        [
+          {
+            'metadata': {
+              'content-group': $.get('_metadata', {}).get('content-group', ''),
+              'content-name': $.get('_metadata', {}).get('content-name', ''),
+              'content-topic': $.get('_metadata', {}).get('content-topic', ''),
+              'event_code': $.get('_metadata', {}).get('event_code', '')
+            },
+            'images-control': {
+              'finished': False,
+              'processing': False,
+              'updated': datetime.utcnow()
+            },
+            'web-search-udm': $.get('_document', {}).get('agenda-object', {}).get('web-search-udm', 12),
+            'web-search-limit': $.get('_document', {}).get('agenda-object', {}).get('web-search-limit', 10),
+            'web-search-topic': item.get('type'),
+            'web-search-query': item.get('query'),
+          }
+          for item in $.get('_document', {}).get('agenda-object', {}).get('search_queries', [])
+        ]
+        
+  # coverage-mapping-image-from-articles
+  - type: mapping
+    name: coverage-mapping-image-from-articles
+    title: "Coverage - Mapping Image From Articles"
+    description: "Mapping data from image from articles"
+    outputs:
+      image-bulk: |
+        [
+          {
+            'image_name': image.get('image_name'),
+            'metadata': $.get('_metadata'),
+            'title': image.get('title'),
+            'version_control': {
+              'finished': False,
+              'processing': False,
+              'updated': datetime.utcnow()
+            },
+            'web-search-udm': 2,
+            'web-search-limit': 10,
+            'web-search-query': image.get('image_query'),
+          }
+          for image in [
+            {
+              'image_name': $.get('_article', {}).get('main_image_name', ''),
+              'image_query': $.get('_article', {}).get('main_image_query', ''),
+              'title': $.get('_article', {}).get('section_title', ''),
+            }
+          ]
+        ]
+
+  # coverage-mapping-image-research-items
+  - type: mapping
+    name: coverage-mapping-image-research-items
+    title: "Coverage - Mapping Image Research Items"
+    description: "Mapping data from image research items"
+    outputs:
+      web-research-items: |
+        [
+          {
+            **d.get('value', {}),
+            'metadata': d.get('metadata', {})
+          }
+          for d in $.get('_documents', [])
+          if d.get('name', '') == 'web-image'
+        ]
+      web-research-finished: |
+        [
+          item
+          for item in $.get('_documents', [])
+          if item.get('value', {}).get('version_control', {}).get('finished', False) == True
+        ]
+      web-research-processing: |
+        [
+          item
+          for item in $.get('_documents', [])
+          if item.get('value', {}).get('version_control', {}).get('processing', False) == True
+        ]
+      web-research-pending: |
+        [
+          item
+          for item in $.get('_documents', [])
+          if item.get('value', {}).get('version_control', {}).get('finished', False) == False
+        ]
+
+  # coverage-mapping-article-control
+  - type: mapping
+    name: coverage-mapping-article-control
+    title: "Coverage - Mapping Article Control"
+    description: "Mapping data from article"
+    outputs:
+      article-control: |
+        $.get('_document', {}).get('article-control', {}) if $.get('_document') else {}
+      article-counter: |
+        $.get('_document', {}).get('article-control', {}).get('counter', 0) if $.get('_document') else 0
+      custom-instruction: |
+        $.get('_document', {}).get('article-object', {}).get('custom_instruction', '') if $.get('_document') else ''
+      custom-level: |
+        $.get('_document', {}).get('article-object', {}).get('custom_level', '') if $.get('_document') else ''
+      custom-script-name: |
+        $.get('_document', {}).get('article-object', {}).get('custom_script_name', '') if $.get('_document') else ''
+      custom-topic: |
+        $.get('_document', {}).get('article-object', {}).get('custom_topic', '') if $.get('_document') else ''
+      content-group: |
+        $.get('_metadata', {}).get('content-group', '')
+      content-name: |
+        $.get('_metadata', {}).get('content-name', '')
+      content-topic: |
+        $.get('_metadata', {}).get('content-topic', '')
+      event_code: |
+        $.get('_metadata', {}).get('event_code', '')
+      team_code: |
+        $.get('_document', {}).get('article-object', {}).get('team_code', '') if $.get('_document') else ''
+      script-code: |
+        $.get('_document', {}).get('article-object', {}).get('script_code', '') if $.get('_document') else ''
+      script-instructions: |
+        $.get('_document', {}).get('article-object', {}).get('content', '') if $.get('_document') else ''

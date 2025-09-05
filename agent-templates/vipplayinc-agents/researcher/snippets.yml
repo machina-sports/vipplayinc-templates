@@ -1,0 +1,202 @@
+workflow:
+
+  name: coverage-researcher-snippets
+  title: "Coverage - Researcher Snippets"
+  description: "Workflow to execute Soccer Game Researcher content snippets."
+  context-variables:
+    debugger:
+      enabled: true
+    google-genai:
+      api_key: "$TEMP_CONTEXT_VARIABLE_GOOGLE_GENERATIVE_AI_API_KEY"
+    machina-ai:
+      api_key: "$TEMP_CONTEXT_VARIABLE_SDK_OPENAI_API_KEY"
+  inputs:
+    content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+    topic: "$.get('topic', 'history')"
+  outputs:
+    workflow-status: "$.get('workflow-status', 'skipped')"
+  tasks:
+
+    # docs: load-next-agenda
+    - type: document
+      name: load-next-agenda
+      connector:
+        name: machina-ai
+        command: "invoke_embedding"
+        model: "text-embedding-3-small"
+      config:
+        action: "search"
+        search-limit: 1
+        search-vector: false
+        search-sorters: ["value.agenda-control.updated", 1]
+      filters:
+        metadata.content-group: "$.get('content-group')"
+        value.agenda-control.finished: "{'$ne': True}"
+        value.agenda-control.moderated: "True"
+        value.agenda-control.processing: "{'$ne': True}"
+        value.agenda-control.searching: "{'$ne': True}"
+        value.agenda-control.snippets: "{'$ne': True}"
+        value.agenda-object.topic: "$.get('topic')"
+      inputs:
+        name: "'content-agenda'"
+      outputs:
+        agenda-exists: "len($.get('documents', [])) > 0 if $.get('documents') else False"
+        agenda-document: "$.get('documents', [{}])[0] if $.get('documents') else None"
+        agenda-document-id: "$.get('documents', [{}])[0].get('_id', '') if $.get('documents') else ''"
+        agenda-metadata: "$.get('documents', [{}])[0].get('metadata', {}) if $.get('documents') else None"
+        agenda-value: "$.get('documents', [{}])[0].get('value', {}) if $.get('documents') else None"
+
+    # map: coverage-mapping-agenda-control
+    - type: mapping
+      name: coverage-mapping-agenda-control
+      condition: "$.get('agenda-exists') is True"
+      inputs:
+        _document: "$.get('agenda-value')"
+        _metadata: "$.get('agenda-metadata')"
+      outputs:
+        agenda-counter: "$.get('agenda-counter')"
+        agenda-control: "$.get('agenda-control')"
+        agenda-control-finished: "$.get('agenda-control', {}).get('finished', False)"
+        agenda-control-searching: "$.get('agenda-control', {}).get('searching', False)"
+        content-group: "$.get('content-group')"
+        content-name: "$.get('content-name')"
+        content-topic: "$.get('content-topic')"
+        team_code: "$.get('team_code')"
+        instructions: "$.get('script-instructions')"
+
+    # docs: agenda-version-control
+    - type: document
+      name: agenda-version-control-processing
+      condition: "$.get('agenda-exists') is True"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      filters:
+        document_id: "$.get('agenda-document-id')"
+      documents:
+        content-agenda: |
+          {
+            **$.get('agenda-value', {}),
+            'agenda-control': {
+              **$.get('agenda-control', {}),
+              'processing': True,
+              'updated': datetime.utcnow()
+            }
+          }
+
+    # docs: load-searches-and-scrapings
+    - type: document
+      name: load-searches-and-scrapings
+      condition: "$.get('agenda-exists') is True"
+      config:
+        action: "search"
+        search-limit: 100
+        search-vector: false
+        search-sorters: ["value.version_control.updated", 1]
+      filters:
+        metadata.content-group: "$.get('content-group', '')"
+        metadata.content-name: "$.get('content-name', '')"
+        metadata.content-topic: "$.get('content-topic', '')"
+      inputs:
+        name: "{'$in': ['web-search', 'web-scraping']}"
+      outputs:
+        search-and-scrapings-documents: "$.get('documents', [])"
+    
+    # mapping: coverage-mapping-websearch-results
+    - type: mapping
+      name: coverage-mapping-websearch-results
+      condition: "$.get('agenda-exists') is True"
+      inputs:
+        _documents: "$.get('search-and-scrapings-documents', [])"
+      outputs:
+        snippets-with-content: "$.get('snippets-with-content', [])"
+        workflow-status: "'executed'"
+        version-control-status: |
+          (
+            $.(agenda-exists) is True
+            and len($.get('web-search-finished')) > 0
+            and len($.get('web-search-pending')) == 0
+          ) and 'finished' or 'processing'
+
+    # FOREACH SNIPPETS
+
+    # prompt: coverage-researcher-snippets-prompt
+    - type: prompt
+      name: coverage-researcher-snippets-prompt
+      connector:
+        name: "google-genai"
+        command: "invoke_prompt"
+        model: "gemini-2.5-pro"
+      foreach:
+        name: snippet-item
+        expr: "$"
+        value: "$.get('snippets-with-content', [])"
+      inputs:
+        _agenda-instructions: "$.get('instructions')"
+        _snippet-item: "$.get('snippet-item', {})"
+      outputs:
+        snippets-bulk: |
+          [
+            {
+              'text': c.get('content', ''),
+              'title': c.get('title', ''),
+              'subject': c.get('subject', ''),
+              'web-scraping-url': c.get('web-scraping-url', ''),
+              'metadata': {
+                **$.(agenda-metadata),
+                'team_code': '$.(team_code)'
+              }
+            }
+            for c in $.get('snippets', [])
+          ]
+
+    # save-web-search-snippets
+    - type: document
+      name: save-web-search-snippets
+      condition: "$.get('agenda-exists') is True"
+      config:
+        action: "bulk-save"
+        embed-vector: true
+        force-update: true
+      connector:
+        name: machina-ai
+        command: "invoke_embedding"
+        model: "text-embedding-3-small"
+      document_name: "'content-snippet'"
+      documents:
+        items: "$.get('parsed-items')"
+      inputs:
+        parsed-items: |
+          [
+            *$.get('snippets-bulk', [])
+          ]
+
+    # VERSION CONTROL
+
+    # docs: agenda-version-control
+    - type: document
+      name: agenda-version-control-update
+      condition: "$.get('agenda-exists') is True"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      filters:
+        document_id: "$.get('agenda-document-id')"
+      documents:
+        content-agenda: |
+          {
+            **$.get('agenda-value', {}),
+            'agenda-control': {
+              **$.get('agenda-control', {}),
+              'counter': $.get('agenda-counter', 0) + 1,
+              'finished': False,
+              'moderated': True,
+              'processing': False,
+              'searching': False,
+              'snippets': $.get('version-control-status') == 'finished' and True or False,
+              'interactive': False,
+              'updated': datetime.utcnow()
+            }
+          }

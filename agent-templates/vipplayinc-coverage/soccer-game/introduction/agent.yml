@@ -1,0 +1,26 @@
+agent:
+
+  name: coverage-event-introduction-agent
+  title: "Coverage - Event Introduction"
+  description: "Workflow to introduce event."
+  # context:
+  #   config-frequency: 0.2
+  workflows:
+
+    # coverage event introduction service
+    - name: "coverage-event-introduction-service"
+      description: "Coverage Event Introduction Service"
+      outputs:
+        event-introduction-service-status: "$.get('workflow-status', False)"
+
+    # coverage event introduction reasoning
+    - name: "coverage-event-introduction-reasoning"
+      description: "Coverage Event Introduction Reasoning"
+      outputs:
+        event-introduction-reasoning-status: "$.get('workflow-status', False)"
+
+    # coverage event introduction executor
+    - name: "coverage-event-introduction-executor"
+      description: "Coverage Event Introduction Executor"
+      outputs:
+        event-introduction-executor-status: "$.get('workflow-status', False)"

@@ -1,0 +1,33 @@
+mappings:
+
+  # coverage-researcher-service-map
+  - type: mapping
+    name: coverage-researcher-service-map
+    title: "Coverage - Researcher Mapping"
+    description: "Mapping data from Soccer Game Researcher service"
+    outputs:
+      content-group: |
+        f"SPORTS_SOCCER_GAME"
+      content-name: |
+        f"{$.('date_prefix')}-{$.('event_title').upper()}-GAME"
+      content-title: |
+        f"{$.('season_title').upper()}-{$.('event_title').upper()}-GAME"
+      coverage-indexes: |
+        [
+          {
+            "title": f"{team[0]} {label.upper()}",
+            "event_title": $.(event_title),
+            "season_title": $.(season_title),
+            "team_code": f"{team[1]}",
+            "team_name": f"{team[0]}",
+            "description": f"{label.upper()} {team[0]} in {$.('season_title')}",
+            "index": f"{$.('date_prefix')}-{team[0]}-{label.upper()}",
+            "index_label": f"SPORTS_SOCCER_GAME_{label.upper()}",
+            "index_topic": f"{label.lower()}"
+          }
+          for team in [
+            ($.('team_home_name'), $.('team_home_id')),
+            ($.('team_away_name'), $.('team_away_id'))
+          ]
+          for label in $.get('selected-topics')
+        ]

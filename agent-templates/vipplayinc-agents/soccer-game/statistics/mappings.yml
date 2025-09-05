@@ -1,0 +1,163 @@
+mappings:
+
+  # coverage-researcher-statistics-event-data
+  - type: mapping
+    name: coverage-researcher-statistics-event-data
+    title: "Coverage - Mapping Soccer Game Researcher Statistics Event Data"
+    description: "Mapping data from sportradar soccer data for statistics"
+    outputs:
+      last_match: "$.get('item')"
+      competitors: "$.get('item').get('sport_event', {}).get('competitors', [])"
+      competitor_home_name: "$.get('item').get('sport_event', {}).get('competitors', [])[0].get('name')"
+      competitor_away_name: "$.get('item').get('sport_event', {}).get('competitors', [])[1].get('name')"
+      competitor_home_id: "$.get('item').get('sport_event', {}).get('competitors', [])[0].get('id')"
+      competitor_away_id: "$.get('item').get('sport_event', {}).get('competitors', [])[1].get('id')"
+      competitor_home_sr_id: "$.get('item').get('sport_event', {}).get('competitors', [])[0].get('sr_id')"
+      competitor_away_sr_id: "$.get('item').get('sport_event', {}).get('competitors', [])[1].get('sr_id')"
+      event_context: "$.get('item').get('sport_event', {}).get('sport_event_context', {})"
+      event_code: "$.get('item').get('sport_event', {}).get('id')"
+      event_date: "$.get('item').get('sport_event', {}).get('start_time')"
+      event_date_gmt3: |
+        (datetime.strptime($.get('item').get('sport_event', {}).get('start_time'), '%Y-%m-%dT%H:%M:%S%z').astimezone(timezone(timedelta(hours=-3)))).strftime('%Y-%m-%d %H:%M')
+      event_days_ago: |
+        datetime.strptime($.get('item').get('sport_event', {}).get('start_time'), '%Y-%m-%dT%H:%M:%S%z').replace(tzinfo=None) - timedelta(days=1)
+      event_day_of_week: |
+        datetime.strptime($.get('item').get('sport_event', {}).get('start_time'), '%Y-%m-%dT%H:%M:%S%z').astimezone(timezone(timedelta(hours=-3))).strftime('%A')
+      event_time_gmt3: |
+        datetime.strptime($.get('item').get('sport_event', {}).get('start_time'), '%Y-%m-%dT%H:%M:%S%z').astimezone(timezone(timedelta(hours=-3))).strftime('%H:%M')
+      event_status: "$.get('item').get('sport_event_status', {})"
+      last_match_title: f"{$.get('item').get('sport_event', {}).get('competitors', [])[0].get('name')} vs {$.get('item').get('sport_event', {}).get('competitors', [])[1].get('name')}"
+      statistics: "next((c for c in $.get('item').get('statistics', {}).get('totals', {}).get('competitors', []) if c.get('id') == $.get('competitor_id')), {})"
+      venue: "$.get('item').get('sport_event', {}).get('venue', {})"
+      venue_title: "$.get('item').get('sport_event', {}).get('venue', {}).get('name')"
+      venue_city: "$.get('item').get('sport_event', {}).get('venue', {}).get('city')"
+      venue_country: "$.get('item').get('sport_event', {}).get('venue', {}).get('country')"
+      venue_id: "$.get('item').get('sport_event', {}).get('venue', {}).get('id')"
+      venue_sr_id: "$.get('item').get('sport_event', {}).get('venue', {}).get('sr_id')"
+      wrapped_event_status_summary: |
+        " | ".join([
+          f"Competitors: {$.get('item').get('sport_event', {}).get('competitors', [])[0].get('name')} vs {$.get('item').get('sport_event', {}).get('competitors', [])[1].get('name')}",
+          f"Score: {$.get('item').get('sport_event', {}).get('competitors', [])[0].get('abbreviation')} {$.get('item').get('sport_event_status', {}).get('home_score')} x {$.get('item').get('sport_event_status', {}).get('away_score')} {$.get('item').get('sport_event', {}).get('competitors', [])[1].get('abbreviation')}",
+          f"Match Status: {$.get('item').get('sport_event_status', {}).get('match_status')}",
+          f"Match Situation: {$.get('item').get('sport_event_status', {}).get('match_situation', {}).get('status', '')}",
+          f"Date: {datetime.strptime($.get('item').get('sport_event', {}).get('start_time'), '%Y-%m-%dT%H:%M:%S%z').astimezone(timezone(timedelta(hours=-3))).strftime('%d/%m/%Y')}",
+          f"Time (GMT-3): {datetime.strptime($.get('item').get('sport_event', {}).get('start_time'), '%Y-%m-%dT%H:%M:%S%z').astimezone(timezone(timedelta(hours=-3))).strftime('%H:%M')}",
+          f"Competition: {$.get('item').get('sport_event', {}).get('sport_event_context', {}).get('competition', {}).get('name')}",
+          f"Round: {$.get('item').get('sport_event', {}).get('sport_event_context', {}).get('round', {}).get('number')}",
+          f"Season: {$.get('item').get('sport_event', {}).get('sport_event_context', {}).get('season', {}).get('name')}",
+          f"Venue: {$.get('item').get('sport_event', {}).get('venue', {}).get('name')} - {$.get('item').get('sport_event', {}).get('venue', {}).get('city_name')}",
+        ])
+
+      wrapped_match_statistics: |
+        " | ".join([
+          f"Ball Possession: Home {$.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[0].get('statistics', {}).get('ball_possession')}% - Away {$.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[1].get('statistics', {}).get('ball_possession')}%",
+          f"Shots Total: Home {$.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[0].get('statistics', {}).get('shots_total')} - Away {$.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[1].get('statistics', {}).get('shots_total')}",
+          f"Shots on Target: Home {$.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[0].get('statistics', {}).get('shots_on_target')} - Away {$.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[1].get('statistics', {}).get('shots_on_target')}",
+          f"Corner Kicks: Home {$.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[0].get('statistics', {}).get('corner_kicks')} - Away {$.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[1].get('statistics', {}).get('corner_kicks')}",
+          f"Fouls: Home {$.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[0].get('statistics', {}).get('fouls')} - Away {$.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[1].get('statistics', {}).get('fouls')}",
+        ])
+
+      wrapped_match_cards: |
+        " | ".join([
+          f"Yellow Cards: Home {$.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[0].get('statistics', {}).get('yellow_cards')} - Away {$.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[1].get('statistics', {}).get('yellow_cards')}",
+          f"Red Cards: Home {$.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[0].get('statistics', {}).get('red_cards')} - Away {$.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[1].get('statistics', {}).get('red_cards')}",
+        ])
+
+      wrapped_match_conditions: |
+        " | ".join([
+          f"Weather: {$.get('item').get('sport_event', {}).get('sport_event_conditions', {}).get('weather', {}).get('overall_conditions', 'Not available')}",
+          f"Pitch: {$.get('item').get('sport_event', {}).get('sport_event_conditions', {}).get('weather', {}).get('pitch_conditions', 'Not available')}",
+          f"Attendance: {$.get('item').get('sport_event', {}).get('sport_event_conditions', {}).get('attendance', {}).get('count', 'Not available')}",
+          f"Referee: {$.get('item').get('sport_event', {}).get('sport_event_conditions', {}).get('referees', [])[0].get('name') if $.get('item').get('sport_event', {}).get('sport_event_conditions', {}).get('referees') else 'Not available'}",
+        ])
+
+      wrapped_broadcast_info: |
+        " | ".join([
+          f"Channel: {channel.get('name')} ({channel.get('country')})"
+          for channel in $.get('item').get('sport_event', {}).get('channels', [])
+        ]) if $.get('item').get('sport_event', {}).get('channels') else "No broadcast information available"
+
+      wrapped_home_key_players: |
+        " | ".join([
+          f"{player.get('name')}: {', '.join([f'{stat}: {value}' for stat, value in player.get('statistics', {}).items() if value > 0])}"
+          for player in $.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[0].get('players', [])
+          if player.get('starter') is True and any(value > 0 for value in player.get('statistics', {}).values())
+        ])
+
+      wrapped_away_key_players: |
+        " | ".join([
+          f"{player.get('name')}: {', '.join([f'{stat}: {value}' for stat, value in player.get('statistics', {}).items() if value > 0])}"
+          for player in $.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[1].get('players', [])
+          if player.get('starter') is True and any(value > 0 for value in player.get('statistics', {}).values())
+        ])
+
+      wrapped_home_scorers: |
+        " | ".join([
+          f"{player.get('name')} ({player.get('statistics', {}).get('goals_scored')} goals)"
+          for player in $.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[0].get('players', [])
+          if player.get('statistics', {}).get('goals_scored', 0) > 0
+        ]) if any(player.get('statistics', {}).get('goals_scored', 0) > 0 
+           for player in $.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[0].get('players', [])) 
+        else "No scorers"
+
+      wrapped_away_scorers: |
+        " | ".join([
+          f"{player.get('name')} ({player.get('statistics', {}).get('goals_scored')} goals)"
+          for player in $.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[1].get('players', [])
+          if player.get('statistics', {}).get('goals_scored', 0) > 0
+        ]) if any(player.get('statistics', {}).get('goals_scored', 0) > 0 
+           for player in $.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[1].get('players', [])) 
+        else "No scorers"
+
+      wrapped_home_assists: |
+        " | ".join([
+          f"{player.get('name')} ({player.get('statistics', {}).get('assists')} assists)"
+          for player in $.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[0].get('players', [])
+          if player.get('statistics', {}).get('assists', 0) > 0
+        ]) if any(player.get('statistics', {}).get('assists', 0) > 0 
+           for player in $.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[0].get('players', [])) 
+        else "No assists"
+
+      wrapped_away_assists: |
+        " | ".join([
+          f"{player.get('name')} ({player.get('statistics', {}).get('assists')} assists)"
+          for player in $.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[1].get('players', [])
+          if player.get('statistics', {}).get('assists', 0) > 0
+        ]) if any(player.get('statistics', {}).get('assists', 0) > 0 
+           for player in $.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[1].get('players', [])) 
+        else "No assists"
+
+      wrapped_disciplinary_actions: |
+        " | ".join([
+          f"{player.get('name')} ({team_name}): {', '.join(disciplinary)}"
+          for team_idx, team_name in enumerate([
+            $.get('item').get('sport_event', {}).get('competitors', [])[0].get('name'),
+            $.get('item').get('sport_event', {}).get('competitors', [])[1].get('name')
+          ])
+          for player in $.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[team_idx].get('players', [])
+          for disciplinary in [[
+            f"Yellow Card" if player.get('statistics', {}).get('yellow_cards', 0) > 0 else None,
+            f"Red Card" if player.get('statistics', {}).get('red_cards', 0) > 0 else None,
+            f"Second Yellow Card" if player.get('statistics', {}).get('yellow_red_cards', 0) > 0 else None
+          ] if card is not None]
+          if any([
+            player.get('statistics', {}).get('yellow_cards', 0) > 0,
+            player.get('statistics', {}).get('red_cards', 0) > 0,
+            player.get('statistics', {}).get('yellow_red_cards', 0) > 0
+          ])
+        ])
+
+      wrapped_substitutions: |
+        " | ".join([
+          f"{team_name} - In: {', '.join([player.get('name') for player in $.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[team_idx].get('players', []) if player.get('statistics', {}).get('substituted_in', 0) > 0])} | Out: {', '.join([player.get('name') for player in $.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[team_idx].get('players', []) if player.get('statistics', {}).get('substituted_out', 0) > 0])}"
+          for team_idx, team_name in enumerate([
+            $.get('item').get('sport_event', {}).get('competitors', [])[0].get('name'),
+            $.get('item').get('sport_event', {}).get('competitors', [])[1].get('name')
+          ])
+          if any([
+            player.get('statistics', {}).get('substituted_in', 0) > 0 or 
+            player.get('statistics', {}).get('substituted_out', 0) > 0
+            for player in $.get('item').get('statistics', {}).get('totals', {}).get('competitors', [])[team_idx].get('players', [])
+          ])
+        ])
+

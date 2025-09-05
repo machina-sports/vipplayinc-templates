@@ -1,0 +1,242 @@
+workflow:
+
+  name: coverage-event-introduction-executor-interactive
+  title: "Coverage - Event Introduction Executor Interactive"
+  description: "Workflow to execute event introduction interactive content."
+  context-variables:
+    debugger:
+      enabled: true
+    google-genai:
+      api_key: "$TEMP_CONTEXT_VARIABLE_GOOGLE_GENERATIVE_AI_API_KEY"
+    machina-ai:
+      api_key: "$TEMP_CONTEXT_VARIABLE_SDK_OPENAI_API_KEY"
+  outputs:
+    workflow-status: "$.get('workflow-status', 'skipped')"
+  tasks:
+
+    # docs: load-next-agenda
+    - type: document
+      name: load-next-agenda
+      connector:
+        name: machina-ai
+        command: "invoke_embedding"
+        model: "text-embedding-3-small"
+      config:
+        action: "search"
+        search-limit: 1
+        search-vector: false
+        search-sorters: ["value.agenda-control.updated", 1]
+      filters:
+        metadata.content-group: "{'$in': ['SPORTS_SOCCER_INTRODUCTION']}"
+        value.agenda-control.finished: "{'$ne': True}"
+        value.agenda-control.moderated: "True"
+        value.agenda-control.processing: "{'$ne': True}"
+        value.agenda-control.searching: "{'$ne': True}"
+        value.agenda-control.snippets: "True"
+        value.agenda-control.interactive: "{'$ne': True}"
+      inputs:
+        name: "'content-agenda'"
+      outputs:
+        agenda-exists: "len($.get('documents', [])) > 0 if $.get('documents') else False"
+        agenda-document: "$.get('documents', [{}])[0] if $.get('documents') else None"
+        agenda-document-id: "$.get('documents', [{}])[0].get('_id', '') if $.get('documents') else ''"
+        agenda-metadata: "$.get('documents', [{}])[0].get('metadata', {}) if $.get('documents') else None"
+        agenda-value: "$.get('documents', [{}])[0].get('value', {}) if $.get('documents') else None"
+
+    # docs: agenda-version-control
+    - type: document
+      name: agenda-version-control-processing
+      condition: "$.get('agenda-exists') is True"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      filters:
+        document_id: "$.get('agenda-document-id')"
+      documents:
+        content-agenda: |
+          {
+            **$.get('agenda-value', {}),
+            'agenda-control': {
+              **$.get('agenda-control', {}),
+              'processing': True,
+              'updated': datetime.utcnow()
+            }
+          }
+
+    # map: coverage-mapping-agenda-control
+    - type: mapping
+      name: coverage-mapping-agenda-control
+      condition: "$.get('agenda-exists') is True"
+      inputs:
+        _document: "$.get('agenda-value')"
+        _metadata: "$.get('agenda-metadata')"
+      outputs:
+        agenda-counter: "$.get('agenda-counter')"
+        agenda-control: "$.get('agenda-control')"
+        agenda-control-finished: "$.get('agenda-control', {}).get('finished', False)"
+        agenda-control-searching: "$.get('agenda-control', {}).get('searching', False)"
+        content-group: "$.get('content-group')"
+        content-name: "$.get('content-name')"
+        content-topic: "$.get('content-topic')"
+        event_code: "$.get('event_code')"
+        instructions: "$.get('script-instructions')"
+
+    # docs: load-snippets
+    - type: document
+      name: load-snippets
+      condition: "$.get('agenda-exists') is True"
+      config:
+        action: "search"
+        search-limit: 100
+        search-vector: false
+        search-sorters: ["value.version_control.updated", 1]
+      filters:
+        metadata.content-group: "$.get('content-group', '')"
+        metadata.content-name: "$.get('content-name', '')"
+        metadata.content-topic: "$.get('content-topic', '')"
+      inputs:
+        name: "'content-snippet'"
+      outputs:
+        snippets-bulk: |
+          [
+            {
+              **d.get('value', {}),
+              'metadata': d.get('metadata', {})
+            }
+            for d in $.get('documents', [])
+          ]
+        snippets-bulk-split: |
+          [
+            $.get('documents', [])[i:i+10]
+            for i in range(0, len($.get('documents', [])), 10)
+          ]
+        snippets-documents: "$.get('documents', [])"
+        workflow-status: "len($.get('documents', [])) > 0 and 'executed' or $.get('workflow-status')"
+
+    # GENERATE POLLS
+
+    # prompt-coverage-polls-in-advance-executor
+    - type: prompt
+      name: prompt-coverage-polls-in-advance-executor
+      condition: "$.get('agenda-exists') is True"
+      connector:
+        name: "google-genai"
+        command: "invoke_prompt"
+        model: "gemini-2.5-pro"
+      foreach:
+        name: snippet-item
+        expr: "$"
+        value: "$.get('snippets-bulk-split', [])"
+      inputs:
+        doc_context: "$.get('snippet-item', [])"
+        instruction: "$.get('instructions')"
+      outputs:
+        generated-content-polls: "$.get('questions', [])"
+
+    # bulk-content-polls
+    - type: document
+      name: bulk-content-polls
+      condition: "$.get('agenda-exists') is True"
+      description: "Bulk save the historical polls."
+      config:
+        action: "bulk-save"
+        embed-vector: false
+      document_name: "'content-poll'"
+      documents:
+        items: "$.get('parsed_polls', [])"
+      inputs:
+        parsed_polls: |
+          [
+            {
+              **c,
+              "metadata": {
+                "content-group": "$.(content-group)",
+                "content-name": "$.(content-name)",
+                "content-topic": "$.(content-topic)",
+                "event_code": "$.(event_code)"
+              },
+              "version_control": {
+                "embed_image_status": "pending"
+              }
+            }
+            for c in $.get('generated-content-polls', [])
+          ]
+
+    # GENERATE QUIZZES
+
+    # prompt-coverage-quizzes-from-history-executor
+    - type: prompt
+      name: prompt-coverage-quizzes-in-advance-executor
+      condition: "$.get('agenda-exists') is True"
+      connector:
+        name: "google-genai"
+        command: "invoke_prompt"
+        model: "gemini-2.5-pro"
+      foreach:
+        name: snippet-item
+        expr: "$"
+        value: "$.get('snippets-bulk-split', [])"
+      inputs:
+        doc_context: "$.get('snippet-item', [])"
+        instruction: "$.get('instructions')"
+      outputs:
+        generated-content-quizzes: "$.get('questions', [])"
+
+    # bulk-content-quizzes
+    - type: document
+      name: bulk-content-quizzes
+      condition: "$.get('agenda-exists') is True"
+      description: "Bulk save the historical quizzes."
+      config:
+        action: "bulk-save"
+        embed-vector: false
+      document_name: "'content-quiz'"
+      documents:
+        items: "$.get('parsed_quizzes', [])"
+      inputs:
+        parsed_quizzes: |
+          [
+            {
+              **c,
+              "metadata": {
+                "content-group": "$.(content-group)",
+                "content-name": "$.(content-name)",
+                "content-topic": "$.(content-topic)",
+                "event_code": "$.(event_code)"
+              },
+              "version_control": {
+                "embed_image_status": "pending"
+              }
+            }
+            for c in $.get('generated-content-quizzes', [])
+          ]
+
+    # VERSION CONTROL
+
+    # docs: agenda-version-control
+    - type: document
+      name: agenda-version-control-update
+      condition: "$.get('agenda-exists') is True"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      filters:
+        document_id: "$.get('agenda-document-id')"
+      documents:
+        content-agenda: |
+          {
+            **$.get('agenda-value', {}),
+            'agenda-control': {
+              **$.get('agenda-control', {}),
+              'counter': $.get('agenda-counter', 0) + 1,
+              'finished': True,
+              'moderated': True,
+              'processing': False,
+              'searching': False,
+              'snippets': True,
+              'interactive': True,
+              'updated': datetime.utcnow()
+            }
+          }

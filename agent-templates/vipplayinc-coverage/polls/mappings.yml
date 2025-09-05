@@ -1,0 +1,42 @@
+mappings:
+
+  # coverage-mapping-polls-control
+  - type: mapping
+    name: coverage-mapping-polls-control
+    title: "Coverage - Mapping Polls Control"
+    description: "Mapping data from polls control"
+    outputs:
+      agenda-required: |
+        $.get('_document', {}).get('agenda-required', []) if $.get('_document') else []
+      polls-control: |
+        $.get('_document', {}).get('polls-control', {}) if $.get('_document') else {}
+      polls-control-status: |
+        $.get('_document', {}).get('polls-control', {}).get('status', 'pending') if $.get('_document') else 'pending'
+
+  # coverage-mapping-polls-service
+  - type: mapping
+    name: coverage-mapping-polls-service
+    title: "Coverage - Mapping Polls Service"
+    description: "Mapping data from polls service"
+    outputs:
+      agenda-required: |
+        []
+      content-group: |
+        f"{$.('script_name')}"
+      content-name: |
+        f"{$.('date_prefix')}_{$.('team_home_name')}_X_{$.('team_away_name')}_POLLS"
+      coverage-indexes: |
+        [
+          f"{$.('date_prefix')}_{$.('team_home_name')}_X_{$.('team_away_name')}_POLLS"
+        ]
+
+  # coverage-mapping-polls-results
+  - type: mapping
+    name: coverage-mapping-polls-results
+    title: "Coverage - Mapping Polls Results"
+    description: "Mapping data from polls results"
+    outputs:
+      polls-results: |
+        [
+          *$.get('_content-polls', [])
+        ]

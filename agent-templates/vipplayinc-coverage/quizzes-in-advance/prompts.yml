@@ -1,0 +1,230 @@
+prompts:
+
+  # prompt-coverage-quizzes-in-advance-executor
+  - type: prompt
+    name: prompt-coverage-quizzes-in-advance-executor
+    title: "Coverage - Quizzes In Advance Executor"
+    description: "Generates basic factual quiz questions for TV based on match data."
+    instruction: |
+        OBJECTIVE: Generate questions about completed events with verifiable answers from official records.
+
+        STRICT BANS:
+        - NO predictions/opinions ("Who will win?", "What might happen?")
+        - NO ambiguous/multi-answer questions
+        - NO future events
+
+        DIFFICULTY LEVELS:
+        EASY: Recent results, simple records, current facts
+        MEDIUM: Performance stats, season comparisons, milestones, tactics
+        HARD: Historical records, multi-season stats, rare achievements
+
+        STRUCTURE:
+        - Multiple-choice with 3 options
+        - One verifiable correct answer
+        - Two plausible wrong answers
+        - Max 50 chars per question
+        
+        QUESTION FORMAT - CRITICAL:
+        - ALWAYS start with interrogative words: "What", "Who", "How many", "When", "Where", "How"
+        - Make questions clear and complete, not just fragments
+        - Examples: "How many goals did Palmeiras score?", "What was the final result?", "Who scored the first goal?"
+        - NEVER use fragments like "Palmeiras goals?" or "Final score?"
+    schema:
+      title: "QuizContentEnglish"
+      description: "Array of quiz questions (max 50 chars) with brief options (max 25 chars)."
+      type: "object"
+      properties:
+        questions:
+          type: "array"
+          minItems: 10
+          maxItems: 10
+          description: "Array of quiz questions (max 50 chars) with brief options (max 25 chars)."
+          items:
+            type: "object"
+            required: [
+              "title",
+              "title_es",
+              "title_it",
+              "title_de",
+              "title_fr",
+              "title_pt",
+              "title_ja",
+              "title_he",
+              "title_ar",
+              "answers",
+              "difficulty",
+              "image_briefing",
+              "text_to_search"
+            ]
+            properties:
+              title:
+                type: "string"
+                description: "Complete question (max 50 chars) for TV/app display."
+              difficulty:
+                type: "string"
+                description: "Difficulty level, create a couple of easy, medium and hard questions"
+                enum: ["EASY", "MEDIUM", "HARD"]
+              image_briefing:
+                type: "string"
+                description: |
+                  Briefing for generate an image for the question, consider the image assets available will come from the image search
+                  Example: "Aerial view of the stadium", "Close up of the player's face", "Goal celebration", "Tactical diagram"
+              text_to_search:
+                type: "array"
+                description: "Array of comma-separated list of relevant terms for image search"
+                items:
+                  type: "string"
+                  description: |
+                    - ALWAYS prefix with "Soccer" to avoid unrelated results.
+                    - MUST include:
+                      - "Soccer" followed by Team name (e.g., "Soccer AC Milan" not just "Milan")
+                      - "Soccer" followed by any mentioned person's full name, stadium name, league name, country name, city name, etc.
+              title_es:
+                type: "string"
+                description: "Complete question in Spanish (max 50 chars)."
+              title_it:
+                type: "string"
+                description: "Complete question in Italian (max 50 chars)."
+              title_de:
+                type: "string"
+                description: "Complete question in German (max 50 chars)."
+              title_fr:
+                type: "string"
+                description: "Complete question in French (max 50 chars)."
+              title_pt:
+                type: "string"
+                description: "Complete question in Brazilian Portuguese (max 50 chars)."
+              title_ja:
+                type: "string"
+                description: "Complete question in Japanese (max 50 chars)."
+              title_he:
+                type: "string"
+                description: "Complete question in Hebrew (max 50 chars)."
+              title_ar:
+                type: "string"
+                description: "Complete question in Arabic (max 50 chars)."
+              answers:
+                type: "array"
+                description: "EXACTLY 3 ULTRA-SHORT options (max 25 chars each) for TV/app display."
+                minItems: 3
+                maxItems: 3
+                items:
+                  type: "object"
+                  description: "Brief answer option (max 25 chars)."
+                  required: [
+                    "title",
+                    "title_es",
+                    "title_it",
+                    "title_de",
+                    "title_fr",
+                    "title_pt",
+                    "title_ja",
+                    "title_he",
+                    "title_ar",
+                    "correct"
+                  ]
+                  properties:
+                    title:
+                      type: "string"
+                      description: "ULTRA-SHORT option (max 25 chars)."
+                    correct:
+                      type: "boolean"
+                      description: "True if this is the ONLY correct answer, False otherwise."
+                    title_es:
+                      type: "string"
+                      description: "SHORT and OBJECTIVE option in Spanish."
+                    title_it:
+                      type: "string"
+                      description: "SHORT and OBJECTIVE option in Italian."
+                    title_de:
+                      type: "string"
+                      description: "SHORT and OBJECTIVE option in German."
+                    title_fr:
+                      type: "string"
+                      description: "SHORT and OBJECTIVE option in French."
+                    title_pt:
+                      type: "string"
+                      description: "SHORT and OBJECTIVE option in Brazilian Portuguese."
+                    title_ja:
+                      type: "string"
+                      description: "SHORT and OBJECTIVE option in Japanese."
+                    title_he:
+                      type: "string"
+                      description: "SHORT and OBJECTIVE option in Hebrew."
+                    title_ar:
+                      type: "string"
+                      description: "SHORT and OBJECTIVE option in Arabic."
+
+  # prompt-coverage-quizzes-in-advance-generator
+  - type: prompt
+    name: prompt-coverage-quizzes-in-advance-generator
+    title: "Coverage - Quizzes In Advance Generator"
+    description: "Generate editorial briefing script for planning pre-match poll coverage focusing on predictions and fan engagement"
+    schema:
+      title: "PromptTeamMatchCoverageInAdvanceQuizzesGenerator"
+      description: "Generate editorial briefing script for planning pre-match poll coverage from a specific team's perspective"
+      required: [
+        "title",
+        "content",
+        "subject",
+        "script_code",
+        "team_perspective",
+        "opponent_team",
+        "quizzes_topics"
+      ]
+      type: "object"
+      properties:
+        content:
+          type: "string"
+          description: "Brief editorial outline highlighting key prediction focus points and pre-match engagement angles"
+        title:
+          type: "string"
+          description: "Engaging title highlighting the upcoming matchup predictions from the specified team's perspective"
+        subject:
+          type: "string"
+          description: "Main focus of the pre-match coverage (e.g., 'Arsenal vs Liverpool trivia', 'Real Madrid Champions League preview quiz')"
+        script_code:
+          type: "string"
+          description: "Match coverage type code in format TEAMA_X_TEAMB_HOME_QUIZZES_ADVANCE or TEAMA_X_TEAMB_AWAY_QUIZZES_ADVANCE"
+        team_perspective:
+          type: "string"
+          description: "The team from whose perspective the prediction content is being generated"
+        opponent_team:
+          type: "string"
+          description: "The opposing team in the upcoming match"
+        quizzes_topics:
+          type: "array"
+          minItems: 1
+          maxItems: 2
+          items:
+            type: "object"
+            description: "List of pre-match quiz topics covering trivia, facts, and fan knowledge testing"
+            required: [
+              "query",
+              "type"
+            ]
+            properties:
+              query:
+                type: "string"
+                description: |
+                  The actual pre-match poll topic to be generated. Focus on predictions and fan engagement. Examples:
+                  - 'Who will win: AC Milan vs Inter?'
+                  - 'First goal scorer prediction'
+                  - 'Total goals: Over or Under 2.5?'
+                  - 'Which team gets more corners?'
+                  - 'Most yellow cards shown?'
+                  - 'Best player on the pitch?'
+              type:
+                type: "string"
+                enum:
+                  - "MATCH_OUTCOME_PREDICTION"
+                  - "FIRST_GOAL_SCORER"
+                  - "TOTAL_GOALS_PREDICTION"
+                  - "CORNER_KICK_PREDICTION"
+                  - "CARD_PREDICTION"
+                  - "BEST_PLAYER_PREDICTION"
+                  - "HALFTIME_SCORE_PREDICTION"
+                  - "TEAM_PERFORMANCE_COMPARISON"
+                  - "FAN_EXCITEMENT_METER"
+                  - "PRE_MATCH_CONFIDENCE"
+                description: "The type of prediction poll to be generated for pre-match engagement" 

@@ -1,0 +1,222 @@
+prompts:
+
+  # prompt-live-event-analysis
+  - type: prompt
+    name: prompt-live-event-analysis
+    title: "Coverage - Live Event Analysis"
+    description: "Extract and analyze specific information from live football events at different match phases"
+    instruction: |
+      OBJECTIVE: Generate engaging statistical analyses that engage fans with relevant data.
+      
+      FUNDAMENTAL RULES: 
+      1. IDENTIFY NEW EVENTS (especially GOALS, CARDS, SUBSTITUTIONS)
+      2. Analyze statistically with clarity and interest
+      3. DO NOT repeat basic facts already covered by editors
+      4. FOCUS ON: relevant statistics, numbers that contextualize the match
+      5. NEVER create duplicate snippets - each snippet must be UNIQUE
+
+      ANTI-DUPLICATE RULE (CRITICAL):
+      - CHECK if it already exists in history-snippets:
+        * Same moment (MM:SS) + same player = DUPLICATE
+        * Same event + same moment = DUPLICATE  
+        * Very similar subject = DUPLICATE
+      - If similarity found → set "snippets: []" (empty array)
+      - PREFER not generating snippet to generating duplicate
+      
+      MANDATORY PROCESS:
+      
+      1. DATA VALIDATION:
+         - CHECK if numerical data exists in documents
+         - VERIFY if player names are correct
+         - CONFIRM statistics in data-team-stats or data-player-stats
+         - USE only neutral terms like "game", "match" if no specific context
+         - DO NOT proceed with unconfirmed information
+         
+      1.1. STATUS VALIDATION:
+         - CHECK "Status:" in context-status
+         - If Status: live → LIVE game (periods: FIRST_HALF, SECOND_HALF)
+         - If Status: closed → game ENDED (can use POST_GAME)
+         - POST_GAME_LIVE only for deep statistical analyses during live games
+       
+      2. SCAN data-timeline looking for:
+         - score_change (GOALS) 
+         - yellow_card, red_card (CARDS)
+         - substitution (SUBSTITUTIONS)
+         - Events with NEW timestamp
+      
+      3. PRIORITY:
+         - GOALS are MAXIMUM PRIORITY
+         - RED CARDS are second priority  
+         - SUBSTITUTIONS are third priority
+         - Other statistics only if no new events
+      
+      HOW TO USE DATA:
+      
+      1. HISTORY-SNIPPETS: Check what has ALREADY been reported - DO NOT repeat
+      2. CONTEXT: Contextualization - DO NOT extract as news
+      3. DATA: Source of snippets - analyze to find NEW events
+      
+      SPECIAL ATTENTION FOR END OF GAME:
+      - When Status: closed, there is MUCH post-game content available
+      - Final statistics can generate multiple unique snippets
+      - Individual performance analyses, statistical comparisons
+      - EACH statistic can be a different snippet
+      - DO NOT set snippets: [] just because the game ended
+      
+      POST-GAME OPPORTUNITIES:
+      📊 FINAL STATISTICS:
+      - Shooting efficiency (shots on target vs total)
+      - Individual player performance
+      - Defensive battle (tackles, interceptions)
+      - Discipline (cards and context)
+      - Temporal analysis (1st half vs 2nd half)
+      - Substitution impact
+      
+      💡 THERE IS ALWAYS UNIQUE CONTENT POST-GAME - be creative with angles!
+      
+      DETAILED STATISTICS:
+      
+      TEAM (data-team-stats):
+      - Ball possession, shots (total/on goal/off target)
+      - Fouls, cards, corners, offsides
+      
+      PLAYERS (data-player-stats):
+      - Goals, assists, shots per player
+      - Individual discipline, substitutions
+      
+      COMPARATIVE ANALYSIS:
+      - Compare with history-snippets
+      - Identify significant changes
+      - Relate events with statistical context
+      
+      EXAMPLES OF BALANCED ANALYSIS:
+      
+      ❌ "Martinez Quarta was sent off at 65 minutes"
+      ✅ "Martinez Quarta compromised River! Accumulated 4 fouls in 65 minutes (0.43/min), 28% above average. His red card reduced defensive efficiency from 2.1 to 1.7 tackles/10min."
+      
+      ❌ "Inter has 52% possession at 72 minutes"
+      ✅ "Inter took advantage of the numerical advantage! Possession rose from 50% to 58% in 7 minutes (16% growth). Offensive pace increased from 0.17 to 0.29 shots/min."
+
+      VOCABULARY VARIATION:
+      - "grew significantly" instead of "EXPLODED"
+      - "controlled" instead of "DOMINATED"
+      - "compromised" instead of "DESTROYED"
+      - "had great advantage" instead of "MASSACRED"
+      
+      CRITICAL RULES - PROHIBITIONS:
+      - DO NOT invent statistics, numbers or data not provided
+      - DO NOT assume absence of events
+      - DO NOT assume type of game (final, semifinal) without explicit information
+      - DO NOT use exaggerated terms without data basis
+      - LIMIT yourself to documented facts
+      - ALWAYS check if a number exists in documents
+      
+      CRITERIA FOR RATINGS (0-10):
+      - 9-10: Exceptional, well above average
+      - 7-8: Good performance, above average
+      - 5-6: Regular, within average
+      - 3-4: Below expected
+      - 0-2: Very poor
+    schema:
+      title: "LiveEventAnalysis"
+      description: "Extract specific excerpts from live events provided in English"
+      type: "object"
+      required:
+        - snippets
+      properties:
+        snippets:
+          type: "array"
+          description: "Excerpts from live events that contain specific information about the match. ONLY include NEW events that don't exist in history-snippets. If everything has been covered, return empty array []."
+          minItems: 0
+          maxItems: 1
+          items:
+            type: "object"
+            required:
+              - title
+              - content
+              - subject
+              - moment
+              - period
+              - play_type
+            properties:
+              content:
+                type: "string"
+                description: |
+                  Statistical analysis of EXACTLY 3 sentences in English. INCLUDE:
+                  - Specific numbers from provided data
+                  - Statistical comparisons based on real data
+                  - Correlations between events connecting available data
+                  - Percentage variations from provided data
+                  BALANCED TONE: engaging but precise language.
+                  VALIDATION: EACH number MUST exist in documents.
+              title:
+                type: "string"
+                description: "Descriptive title based ONLY on real and NEW events found in documents. Example: 'João Silva's goal opens the score for Flamengo'"
+              subject:
+                type: "string"
+                description: "Specific event, involved player or match moment based on what's in documents and is news. ALWAYS include team names. VERIFY it's not a duplicate of history-snippets. Example: 'Flamengo vs Vasco - João Silva's goal'"
+              moment:
+                type: "string"
+                description: |
+                  Specific moment in MM:SS format (minutes:seconds).
+                  Examples: "74:26", "05:00"
+                  If pre-game: "00:00"
+                  If post-game: "90:00"
+              period:
+                type: "string"
+                description: |
+                  Match phase code:
+                  PRE_GAME: Before start
+                  FIRST_HALF: First 45 minutes + added time
+                  HALFTIME: Between halves
+                  SECOND_HALF: Second 45 minutes + added time
+                  AWAITING_EXTRA_TIME: Before extra time
+                  FIRST_HALF_EXTRA_TIME: First half of extra time
+                  EXTRA_TIME_BREAK: Extra time break
+                  SECOND_HALF_EXTRA_TIME: Second half of extra time
+                  AWAITING_PENALTIES: Before penalties
+                  PENALTIES: Penalty shootout
+                  END_OF_GAME: Final moment
+                  POST_GAME_LIVE: Statistical analyses during live game
+                  POST_GAME: Post-match events (when Status: closed)
+                enum:
+                  - PRE_GAME
+                  - FIRST_HALF
+                  - HALFTIME
+                  - SECOND_HALF
+                  - AWAITING_EXTRA_TIME
+                  - FIRST_HALF_EXTRA_TIME
+                  - EXTRA_TIME_BREAK
+                  - SECOND_HALF_EXTRA_TIME
+                  - AWAITING_PENALTIES
+                  - PENALTIES
+                  - END_OF_GAME
+                  - POST_GAME_LIVE
+                  - POST_GAME
+              play_type:
+                type: "string"
+                description: |
+                  Type of play or event:
+                  - NORMAL: Common match event
+                  - IMPORTANT: Significant event that impacts the game
+                  - AUTOMATIC_SUMMARY: Automatic statistics summary
+                  - YELLOW_CARD: Yellow card
+                  - RED_CARD: Red card or ejection
+                  - SUBSTITUTION: Player entry or exit
+                  - GOAL: Goal scored
+                  - OWN_GOAL: Own goal
+                  - PENALTY: Penalty awarded, taken or saved
+                  - POST_GAME_MATCH: Post-game analysis about the match
+                  - POST_GAME_HIGHLIGHT: Post-game analysis of individual performances
+                enum:
+                  - NORMAL
+                  - IMPORTANT
+                  - AUTOMATIC_SUMMARY
+                  - YELLOW_CARD
+                  - RED_CARD
+                  - SUBSTITUTION
+                  - GOAL
+                  - OWN_GOAL
+                  - PENALTY
+                  - POST_GAME_MATCH
+                  - POST_GAME_HIGHLIGHT

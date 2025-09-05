@@ -1,0 +1,288 @@
+setup:
+  title: "VIP Play Inc. Coverage"
+  description: AI-powered agenda for VIP Play Inc. coverage.
+  category:
+    - special-templates
+  estimatedTime: 15 minutes
+  features:
+    - AI Agent to generate articles, briefings, and snippets.
+    - AI Chat to answer questions about the Tennessee College Football Moderator.
+    - AI Image Generator to generate images for the blog, using a Tennessee College Football match as context.
+  integrations:
+    - sportradar
+  status: available
+  value: "agent-templates/vipplayinc-coverage"
+  version: 1.0.0
+
+datasets:
+
+  - type: "mappings"
+    path: "_mappings.yml"
+    
+  # agenda
+
+  - type: "workflow"
+    path: "agenda/executor.yml"
+
+  - type: "workflow"
+    path: "agenda/generator.yml"
+
+  - type: "mappings"
+    path: "agenda/mappings.yml"
+
+  - type: "prompts"
+    path: "agenda/prompts.yml"
+
+  - type: "workflow"
+    path: "agenda/service.yml"
+
+  - type: "agent"
+    path: "agenda/consumer.yml"
+
+  # images
+
+  - type: "workflow"
+    path: "images/_executor.yml"
+    
+  - type: "workflow"
+    path: "images/executor.yml"
+
+  - type: "workflow"
+    path: "images/generator.yml"
+
+  - type: "mappings"
+    path: "images/mappings.yml"
+
+  - type: "prompts"
+    path: "images/prompts.yml"
+  
+  - type: "workflow"
+    path: "images/service.yml"
+
+  - type: "agent"
+    path: "images/consumer.yml"
+
+  # narration
+
+  - type: "prompts"
+    path: "narration/prompts/analysis.yml"
+
+  - type: "prompts"
+    path: "narration/prompts/lineups.yml"
+
+  - type: "workflow"
+    path: "narration/workflows/narration.yml"
+
+  - type: "workflow"
+    path: "narration/workflows/use-event.yml"
+
+  - type: "agent"
+    path: "narration/consumer-live.yml"
+
+  - type: "agent"
+    path: "narration/consumer-long.yml"
+
+  - type: "agent"
+    path: "narration/consumer-narration.yml"
+
+  - type: "agent"
+    path: "narration/consumer-pre.yml"
+
+  # polls
+
+  - type: "workflow"
+    path: "polls/executor.yml"
+
+  - type: "workflow"
+    path: "polls/generator.yml"
+
+  - type: "mappings"
+    path: "polls/mappings.yml"
+
+  - type: "prompts"
+    path: "polls/prompts.yml"
+  
+  - type: "workflow"
+    path: "polls/service.yml"
+
+  - type: "agent"
+    path: "polls/consumer.yml"
+
+  # polls-in-advance
+
+  - type: "workflow"
+    path: "polls-in-advance/executor.yml"
+
+  - type: "workflow"
+    path: "polls-in-advance/generator.yml"
+
+  - type: "mappings"
+    path: "polls-in-advance/mappings.yml"
+
+  - type: "prompts"
+    path: "polls-in-advance/prompts.yml"
+  
+  - type: "workflow"
+    path: "polls-in-advance/service.yml"
+
+  - type: "agent"
+    path: "polls-in-advance/consumer.yml"
+
+  # quizzes
+
+  - type: "workflow"
+    path: "quizzes/_executor.yml"
+
+  - type: "workflow"
+    path: "quizzes/executor.yml"
+
+  - type: "workflow"
+    path: "quizzes/generator.yml"
+
+  - type: "mappings"
+    path: "quizzes/mappings.yml"
+
+  - type: "prompts"
+    path: "quizzes/prompts.yml"
+  
+  - type: "workflow"
+    path: "quizzes/service.yml"
+
+  - type: "agent"
+    path: "quizzes/consumer.yml"
+
+  # quizzes-from-history
+
+  - type: "workflow"
+    path: "quizzes-from-history/service.yml"
+
+  - type: "workflow"
+    path: "quizzes-from-history/generator.yml"
+
+  - type: "workflow"
+    path: "quizzes-from-history/executor.yml"
+
+  - type: "mappings"
+    path: "quizzes-from-history/mappings.yml"
+
+  - type: "prompts"
+    path: "quizzes-from-history/prompts.yml"
+
+  - type: "agent"
+    path: "quizzes-from-history/consumer.yml"
+
+  # quizzes-in-advance
+
+  - type: "workflow"
+    path: "quizzes-in-advance/executor.yml"
+
+  - type: "workflow"
+    path: "quizzes-in-advance/generator.yml"
+
+  - type: "mappings"
+    path: "quizzes-in-advance/mappings.yml"
+
+  - type: "prompts"
+    path: "quizzes-in-advance/prompts.yml"
+  
+  - type: "workflow"
+    path: "quizzes-in-advance/service.yml"
+
+  - type: "agent"
+    path: "quizzes-in-advance/consumer.yml"
+
+  # researcher-stats
+
+  - type: "workflow"
+    path: "researcher-stats/service.yml"
+
+  - type: "workflow"
+    path: "researcher-stats/reasoning.yml"
+
+  - type: "workflow"
+    path: "researcher-stats/executor.yml"
+
+  - type: "mappings"
+    path: "researcher-stats/mappings.yml"
+
+  - type: "prompts"
+    path: "researcher-stats/prompts/analysis.yml"
+
+  - type: "prompts"
+    path: "researcher-stats/prompts/lastmatch.yml"
+
+  - type: "prompts"
+    path: "researcher-stats/prompts/reasoning.yml"
+
+  - type: "agent"
+    path: "researcher-stats/consumer.yml"
+
+  # soccer-game introduction
+
+  - type: "agent"
+    path: "soccer-game/introduction/agent.yml"
+
+  - type: "mappings"
+    path: "soccer-game/introduction/mappings.yml"
+
+  - type: "prompts"
+    path: "soccer-game/introduction/prompts/analysis.yml"
+
+  - type: "prompts"
+    path: "soccer-game/introduction/prompts/reasoning.yml"
+
+  - type: "prompts"
+    path: "soccer-game/introduction/prompts/unmoderate.yml"
+
+  - type: "workflow"
+    path: "soccer-game/introduction/executors/interactive.yml"
+
+  - type: "workflow"
+    path: "soccer-game/introduction/executors/moderation.yml"
+
+  - type: "workflow"
+    path: "soccer-game/introduction/executors/searching.yml"
+
+  - type: "workflow"
+    path: "soccer-game/introduction/executors/snippets.yml"
+
+  - type: "workflow"
+    path: "soccer-game/introduction/reasoning.yml"
+
+  - type: "workflow"
+    path: "soccer-game/introduction/service.yml"
+
+  # soccer-game prelive
+
+  - type: "agent"
+    path: "soccer-game/prelive/agent.yml"
+
+  - type: "mappings"
+    path: "soccer-game/prelive/mappings.yml"
+
+  - type: "prompts"
+    path: "soccer-game/prelive/prompts/analysis.yml"
+
+  - type: "prompts"
+    path: "soccer-game/prelive/prompts/reasoning.yml"
+
+  - type: "prompts"
+    path: "soccer-game/prelive/prompts/unmoderate.yml"
+
+  - type: "workflow"
+    path: "soccer-game/prelive/executors/interactive.yml"
+
+  - type: "workflow"
+    path: "soccer-game/prelive/executors/moderation.yml"
+
+  - type: "workflow"
+    path: "soccer-game/prelive/executors/searching.yml"
+
+  - type: "workflow"
+    path: "soccer-game/prelive/executors/snippets.yml"
+
+  - type: "workflow"
+    path: "soccer-game/prelive/reasoning.yml"
+
+  - type: "workflow"
+    path: "soccer-game/prelive/service.yml"

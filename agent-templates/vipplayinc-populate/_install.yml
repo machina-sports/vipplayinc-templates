@@ -1,0 +1,33 @@
+setup:
+  title: "VIP Play Inc. Populate Data"
+  description: AI-powered blog and chat for VIP Play Inc.
+  category:
+    - special-templates
+  estimatedTime: 15 minutes
+  features:
+    - AI Agent to generate articles, briefings, and snippets.
+    - AI Chat to answer questions about the Tennessee College Football Moderator.
+    - AI Image Generator to generate images for the blog, using a Tennessee College Football match as context.
+  integrations:
+    - sportradar
+  status: available
+  value: "agent-templates/vipplayinc-populate"
+  version: 1.0.0
+
+datasets:
+  
+  - type: "workflow"
+    path: "folders-config.yml"  
+
+  - type: "mappings"
+    path: "mappings/event-summary.yml"
+
+  - type: "mappings"
+    path: "mappings/event-statistics.yml"
+
+  - type: "mappings"
+    path: "mappings/last-match.yml"
+  
+  - type: "mappings"
+    path: "mappings/version-control.yml"
+  

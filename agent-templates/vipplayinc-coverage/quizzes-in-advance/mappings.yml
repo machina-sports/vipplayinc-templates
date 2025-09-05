@@ -1,0 +1,61 @@
+mappings:
+
+  # coverage-mapping-quizzes-in-advance-control
+  - type: mapping
+    name: coverage-mapping-quizzes-in-advance-control
+    title: "Coverage - Mapping Quizzes In Advance Control"
+    description: "Mapping data from quizzes in advance control"
+    outputs:
+      agenda-required: |
+        $.get('_document', {}).get('agenda-required', []) if $.get('_document') else []
+      quizzes-control: |
+        $.get('_document', {}).get('quizzes-control', {}) if $.get('_document') else {}
+      quizzes-control-status: |
+        $.get('_document', {}).get('quizzes-control', {}).get('status', 'pending') if $.get('_document') else 'pending'
+
+  # coverage-mapping-quizzes-in-advance-service
+  - type: mapping
+    name: coverage-mapping-quizzes-in-advance-service
+    title: "Coverage - Mapping Quizzes In Advance Service"
+    description: "Mapping data from quizzes in advance service"
+    outputs:
+      agenda-required: |
+        []
+      content-group: |
+        f"{$.('script_name')}"
+      content-name: |
+        f"{$.('date_prefix')}-{$.('team_home_name')}-X-{$.('team_away_name')}-QUIZZES_IN_ADVANCE"
+      coverage-indexes: |
+        [
+          {
+            "title": "Before Match Quizzes",
+            "description": "Pre-match trivia and knowledge quizzes for fan engagement",
+            "index": f"{$.('date_prefix')}-{$.('team_home_name')}-X-{$.('team_away_name')}-QUIZZES_IN_ADVANCE-BEFORE_MATCH"
+          },
+          {
+            "title": "First Half Quizzes", 
+            "description": "Quizzes focused on first half facts and historical analysis",
+            "index": f"{$.('date_prefix')}-{$.('team_home_name')}-X-{$.('team_away_name')}-QUIZZES_IN_ADVANCE-FIRST_HALF"
+          },
+          {
+            "title": "Half Time Quizzes",
+            "description": "Half-time break quizzes and trivia challenges",
+            "index": f"{$.('date_prefix')}-{$.('team_home_name')}-X-{$.('team_away_name')}-QUIZZES_IN_ADVANCE-HALF_TIME"
+          },
+          {
+            "title": "Second Half Quizzes",
+            "description": "Second half focused quizzes and match knowledge tests",
+            "index": f"{$.('date_prefix')}-{$.('team_home_name')}-X-{$.('team_away_name')}-QUIZZES_IN_ADVANCE-SECOND_HALF"
+          }
+        ]
+
+  # coverage-mapping-quizzes-in-advance-results
+  - type: mapping
+    name: coverage-mapping-quizzes-in-advance-results
+    title: "Coverage - Mapping Quizzes In Advance Results"
+    description: "Mapping data from quizzes in advance results"
+    outputs:
+      quizzes-results: |
+        [
+          *$.get('_content-quizzes', [])
+        ] 

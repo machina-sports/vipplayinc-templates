@@ -1,0 +1,43 @@
+prompts:
+
+  # coverage-researcher-snippets-prompt
+  - type: prompt
+    name: coverage-researcher-snippets-prompt
+    title: "Coverage - Researcher Snippets"
+    description: |
+      Analyze scraped webpage content to extract compelling story insights and contextual information in English, focusing ONLY on content that matches the agenda_instruction topic/subject. Transform relevant web content into structured English summaries that highlight key persons, statistics, facts, and narrative elements that create engaging storytelling opportunities for sports coverage. Content not related to the agenda_instruction topic must be ignored. All outputs must be in English regardless of the input language.
+    schema:
+      title: "WebContentAnalysisForSemanticLayer"
+      description: |
+        Process scraped webpage content to generate insightful summaries in English that serve as context for a semantic layer, strictly adhering to the agenda_instruction topic/subject. Extract and structure only the most compelling elements that are relevant to the specified topic, including key personalities, significant numbers, notable facts, and story-worthy details. Ignore any content that does not align with the agenda_instruction. Focus on identifying narrative hooks, statistical highlights, human interest angles, and factual foundations that can enhance sports coverage storytelling specifically for the given topic. All content must be produced in English, even when processing content in other languages.
+      type: "object"
+      properties:
+        snippets:
+          type: "array"
+          description: |
+            Contextual insights extracted from scraped webpage content that strictly match the agenda_instruction topic/subject, structured as story-ready summaries in English. Each snippet must be directly related to the specified topic and capture a compelling narrative element with supporting facts, key personalities, and statistical context that can enhance sports coverage storytelling. Content not related to the agenda_instruction must be filtered out. All snippets must be written in English, regardless of the source content's language.
+          minItems: 1
+          maxItems: 10
+          items:
+            type: "object"
+            required:
+              - title
+              - content
+              - subject
+              - web-scraping-url
+            properties:
+              content:
+                type: "string"
+                description: |
+                  Rich narrative summary in English containing key story elements that strictly relate to the agenda_instruction topic/subject. Extract only relevant content including: prominent persons (players, coaches, officials), significant numbers (scores, statistics, records, dates, ages, transfer values), compelling facts (achievements, milestones, records broken), and human interest details (backgrounds, rivalries, comebacks, controversies). Structure as a coherent story segment that provides context and depth specifically about the given topic. Include specific names, exact figures, and concrete details that make the story authentic and engaging, while ensuring all content aligns with the agenda_instruction. Ignore any content that does not match the specified topic. All content must be written in English, translating any source material while preserving accuracy. Example: 'Kylian Mbappé became the youngest player since Pelé to score in a World Cup final when he found the net against Croatia on July 15, 2018, at Luzhniki Stadium in Moscow. At just 19 years and 207 days, the PSG forward's goal helped secure France's 4-2 victory and their second world title, with Mbappé finishing as Best Young Player of the tournament after scoring 4 goals in 7 matches.'
+              title:
+                type: "string"
+                description: |
+                  Compelling headline in English that captures the essence of the story insight related to the agenda_instruction topic/subject, emphasizing the most newsworthy or interesting element. Should highlight key personalities, significant achievements, or notable statistics that are specifically relevant to the given topic. Focus on what makes this information valuable for storytelling while ensuring strict adherence to the agenda_instruction. All titles must be in English, translating any source material appropriately. Example: 'Mbappé's Historic World Cup Final Goal at 19' or 'France's Second World Cup Victory Through Rising Star'
+              subject:
+                type: "string"
+                description: |
+                  Primary subject classification in English that must align with the agenda_instruction topic/subject. Include full names of key persons, specific teams/organizations, competitions, and the central narrative theme that are relevant to the given topic. This helps categorize content for semantic layer organization and ensures content matches the specified focus. All subjects must be in English, with proper English names for teams, competitions, and themes. Example: 'Kylian Mbappé - French National Team - FIFA World Cup 2018 - youngest goalscorer milestone'
+              web-scraping-url:
+                type: "string"
+                description: "The URL of the scraped webpage."

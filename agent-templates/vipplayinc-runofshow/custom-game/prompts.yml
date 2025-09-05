@@ -1,0 +1,209 @@
+prompts:
+
+  # prompt-sports-event-data
+  - type: prompt
+    name: prompt-sports-event-data
+    title: "Sports Event Data Generator"
+    description: "Generates comprehensive sports event data structure."
+    instruction: |
+        OBJECTIVE: Create detailed sports event data with all relevant match information.
+
+        GUIDELINES:
+        - Include complete competitor information
+        - Provide full event context details
+        - Ensure all timestamps and venue data are accurate
+        - Include competition and season information
+    schema:
+      title: "SportsEventData"
+      description: "Complete sports event data structure with all match details."
+      type: "object"
+      required: ["sport_event", "sport_event_status", "start_time", "title"]
+      properties:
+        sport_event:
+          type: "object"
+          required: ["competitors", "id", "sport_event_context", "start_time", "start_time_confirmed", "venue"]
+          properties:
+            competitors:
+              type: "array"
+              minItems: 2
+              maxItems: 2
+              items:
+                type: "object"
+                required: ["abbreviation", "country", "country_code", "gender", "id", "name", "qualifier"]
+                properties:
+                  abbreviation:
+                    type: "string"
+                    description: "Team abbreviation code."
+                  country:
+                    type: "string"
+                    description: "Team's country name."
+                  country_code:
+                    type: "string"
+                    description: "Three-letter country code."
+                  gender:
+                    type: "string"
+                    description: "Gender category."
+                  id:
+                    type: "string"
+                    description: "Unique competitor identifier."
+                  name:
+                    type: "string"
+                    description: "Full team name."
+                  qualifier:
+                    type: "string"
+                    enum: ["home", "away"]
+                    description: "Home or away designation."
+            id:
+              type: "string"
+              description: "Unique sport event identifier."
+            sport_event_context:
+              type: "object"
+              required: ["category", "competition", "groups", "round", "season", "sport", "stage"]
+              properties:
+                category:
+                  type: "object"
+                  required: ["country_code", "id", "name"]
+                  properties:
+                    country_code:
+                      type: "string"
+                      description: "Category country code."
+                    id:
+                      type: "string"
+                      description: "Category identifier."
+                    name:
+                      type: "string"
+                      description: "Category name."
+                competition:
+                  type: "object"
+                  required: ["gender", "id", "name"]
+                  properties:
+                    gender:
+                      type: "string"
+                      description: "Competition gender category."
+                    id:
+                      type: "string"
+                      description: "Competition identifier."
+                    name:
+                      type: "string"
+                      description: "Competition name."
+                groups:
+                  type: "array"
+                  items:
+                    type: "object"
+                    required: ["id", "name"]
+                    properties:
+                      id:
+                        type: "string"
+                        description: "Group identifier."
+                      name:
+                        type: "string"
+                        description: "Group name."
+                round:
+                  type: "object"
+                  required: ["number"]
+                  properties:
+                    number:
+                      type: "integer"
+                      description: "Round number."
+                season:
+                  type: "object"
+                  required: ["competition_id", "end_date", "id", "name", "start_date", "year"]
+                  properties:
+                    competition_id:
+                      type: "string"
+                      description: "Associated competition ID."
+                    end_date:
+                      type: "string"
+                      description: "Season end date in format: YYYY-MM-DD (e.g., 2025-09-06)."
+                    id:
+                      type: "string"
+                      description: "Season identifier."
+                    name:
+                      type: "string"
+                      description: "Season name."
+                    start_date:
+                      type: "string"
+                      description: "Season start date in format: YYYY-MM-DD (e.g., 2025-09-06)."
+                    year:
+                      type: "string"
+                      description: "Season year designation."
+                sport:
+                  type: "object"
+                  required: ["id", "name"]
+                  properties:
+                    id:
+                      type: "string"
+                      description: "Sport identifier."
+                    name:
+                      type: "string"
+                      description: "Sport name."
+                stage:
+                  type: "object"
+                  required: ["end_date", "order", "phase", "start_date", "type", "year"]
+                  properties:
+                    end_date:
+                      type: "string"
+                      description: "Stage end date in format: YYYY-MM-DD (e.g., 2025-09-06)."
+                    order:
+                      type: "integer"
+                      description: "Stage order."
+                    phase:
+                      type: "string"
+                      description: "Stage phase description."
+                    start_date:
+                      type: "string"
+                      description: "Stage start date in format: YYYY-MM-DD (e.g., 2025-09-06)."
+                    type:
+                      type: "string"
+                      description: "Stage type."
+                    year:
+                      type: "string"
+                      description: "Stage year."
+            start_time:
+              type: "string"
+              description: "Event start time in format: YYYY-MM-DDTHH:MM:SS+00:00 (e.g., 2025-09-06T09:00:00+00:00)."
+            start_time_confirmed:
+              type: "boolean"
+              description: "Whether start time is confirmed."
+            venue:
+              type: "object"
+              required: ["capacity", "city_name", "country_code", "country_name", "id", "map_coordinates", "name", "timezone"]
+              properties:
+                capacity:
+                  type: "integer"
+                  description: "Venue capacity."
+                city_name:
+                  type: "string"
+                  description: "Venue city name."
+                country_code:
+                  type: "string"
+                  description: "Venue country code."
+                country_name:
+                  type: "string"
+                  description: "Venue country name."
+                id:
+                  type: "string"
+                  description: "Venue identifier."
+                map_coordinates:
+                  type: "string"
+                  description: "Venue GPS coordinates."
+                name:
+                  type: "string"
+                  description: "Venue name."
+                timezone:
+                  type: "string"
+                  description: "Venue timezone."
+        sport_event_status:
+          type: "object"
+          required: ["status"]
+          properties:
+            status:
+              type: "string"
+              description: "Current event status."
+        start_time:
+          type: "string"
+          description: "Formatted start time in format: YYYY-MM-DDTHH:MM:SS+00:00 (e.g., 2025-09-06T09:00:00+00:00)."
+        title:
+          type: "string"
+          description: "Event title with team names."
+

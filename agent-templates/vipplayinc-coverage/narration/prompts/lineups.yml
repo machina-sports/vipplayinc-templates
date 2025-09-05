@@ -1,0 +1,64 @@
+prompts:
+
+  # prompt-live-event-lineups
+
+  - type: prompt
+    name: prompt-live-event-lineups
+    title: "Coverage - Live Event Lineups"
+    description: "Extract and analyze specific information from team lineups provided only"
+    schema:
+      title: "FootballLineupsLiveEvent"
+      description: "Extract specific excerpts from team lineups provided - NO GENERATED CONTENT ALLOWED"
+      type: "object"
+      properties:
+        snippets:
+          type: "array"
+          description: "Exact excerpts from team lineups provided that contain specific information about lineups - must be direct quotes or paraphrases only from source material"
+          minItems: 1
+          maxItems: 20
+          items:
+            type: "object"
+            required:
+              - title
+              - content
+              - subject
+              - script_code
+            properties:
+              content:
+                type: "string"
+                description: "ONLY extract real information about players and coach mentioned in the provided documents. Include exact player names, their positions when mentioned, jersey numbers if available, coach name and information about him. DO NOT generate, assume or create any information not explicitly present in the documents. If the document mentions 'João Silva, jersey 10' or 'Coach Carlos Santos', include that exact information. If it mentions specific players, their positions or coach information, include those exact details."
+              title:
+                type: "string"
+                description: "Create a title based ONLY on real players and coach found in the documents. Use real names of players and coach mentioned in the source material."
+              subject:
+                type: "string"
+                description: "Identify the specific player, group of players or coach based ONLY on what is actually mentioned in the provided documents. Use exact names of players and coach as they appear in the source text. Do not generalize or create generic descriptions."
+              script_code:
+                type: "string"
+                description: |
+                  Content type code that categorizes the excerpt based on players and coach mentioned in the document. Categories include:
+                  Starting players: STARTING_PLAYERS, FEATURED_PLAYER, TEAM_CAPTAIN
+                  Player information: PLAYER_POSITION, JERSEY_NUMBER, PLAYER_AGE
+                  Player status: INJURED_PLAYER, SUSPENDED_PLAYER, AVAILABLE_PLAYER
+                  Bench: RESERVE_PLAYERS, SUBSTITUTE_PLAYER
+                  History: DEBUT_PLAYER, VETERAN_PLAYER, PLAYER_RETURN
+                  Coach: HEAD_COACH, ASSISTANT_COACH, COACH_DECISIONS, COACH_HISTORY
+                enum:
+                  - STARTING_PLAYERS
+                  - FEATURED_PLAYER
+                  - TEAM_CAPTAIN
+                  - PLAYER_POSITION
+                  - JERSEY_NUMBER
+                  - PLAYER_AGE
+                  - INJURED_PLAYER
+                  - SUSPENDED_PLAYER
+                  - AVAILABLE_PLAYER
+                  - RESERVE_PLAYERS
+                  - SUBSTITUTE_PLAYER
+                  - DEBUT_PLAYER
+                  - VETERAN_PLAYER
+                  - PLAYER_RETURN
+                  - HEAD_COACH
+                  - ASSISTANT_COACH
+                  - COACH_DECISIONS
+                  - COACH_HISTORY

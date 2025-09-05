@@ -1,0 +1,157 @@
+prompts:
+  # prompt-coverage-runofshow-mediapost
+  - type: prompt
+    name: prompt-coverage-runofshow-mediapost
+    title: "Coverage - Run of Show Social Media Content Plan"
+    description: "Generates a comprehensive social media content plan for the 7 days leading up to a match."
+    instruction: |
+        OBJETIVO: Criar um plano de comunicação criativo e detalhado para engajar a audiência nas plataformas digitais nos 7 dias que antecedem o jogo.
+
+        DIRETRIZES:
+        - Desenvolver ideias criativas e campanhas envolventes
+        - Criar conteúdo específico para cada plataforma (Instagram, X, TikTok, YouTube)
+        - Explorar diferentes formatos de conteúdo (Reels, Carrossel, Stories, etc.)
+        - Manter linguagem adequada para cada rede social
+        - Incluir elementos interativos e participativos
+        - Aproveitar momentos históricos e rivalidade
+
+        BRIEFING DE BUSCA DE IMAGENS/TEXTO:
+        - Fornecer termos relevantes separados por vírgula para busca de imagens
+        - SEMPRE prefixar com "Soccer" para evitar resultados não relacionados
+        - Incluir nomes dos times, nomes completos dos jogadores, estádio, liga, país ou nomes de cidades quando relevante
+
+    schema:
+      title: "SocialMediaContentPlan"
+      description: |
+        REGRAS DO PLANO DE CONTEÚDO:
+
+        OBJETIVO:
+        - Engajamento dos fãs através de múltiplas plataformas
+        - Construção de expectativa para o jogo
+        - Participação ativa do público
+        - Valorização da história do clássico
+
+        DIRETRIZES:
+        - Conteúdo adaptado por plataforma
+        - Linguagem específica por rede
+        - Foco em interatividade
+        - Exploração de formatos diversos
+        - Uso de elementos históricos
+
+        ESTRUTURA:
+        - Campanhas criativas
+        - Cronograma diário de posts
+        - Enquetes e desafios
+        - Hashtags e temas
+      type: "object"
+      required: ["campaign_name", "campaign_description", "daily_content_plan"]
+      properties:
+        campaign_name:
+          type: "string"
+          description: "Nome criativo da campanha que será usado em todas as redes (max 50 caracteres)"
+        campaign_description:
+          type: "string"
+          description: "Breve descrição do conceito e objetivo da campanha (max 200 caracteres)"
+        daily_content_plan:
+          type: "array"
+          description: "Planejamento detalhado para cada um dos 7 dias antes do jogo"
+          minItems: 7
+          maxItems: 7
+          items:
+            type: "object"
+            required: [
+              "day_number",
+              "theme",
+              "instagram_content",
+              "x_content",
+              "tiktok_content",
+              "youtube_content",
+              "hashtags",
+              "text_to_search"
+            ]
+            properties:
+              day_number:
+                type: "integer"
+                description: "Número do dia antes do jogo (7 a 1)"
+              theme:
+                type: "string"
+                description: "Tema principal do dia (max 50 caracteres)"
+              instagram_content:
+                type: "array"
+                description: "Conteúdo planejado para Instagram"
+                items:
+                  type: "object"
+                  required: ["format", "title", "description"]
+                  properties:
+                    format:
+                      type: "string"
+                      enum: ["Reels", "Carrossel", "Stories", "Post"]
+                    title:
+                      type: "string"
+                      description: "Título do conteúdo (max 50 caracteres)"
+                    description:
+                      type: "string"
+                      description: "Descrição detalhada do conteúdo (max 200 caracteres)"
+              x_content:
+                type: "array"
+                description: "Conteúdo planejado para X (Twitter)"
+                items:
+                  type: "object"
+                  required: ["format", "title", "description"]
+                  properties:
+                    format:
+                      type: "string"
+                      enum: ["Tweet", "Thread", "Poll", "Video"]
+                    title:
+                      type: "string"
+                      description: "Título do conteúdo (max 50 caracteres)"
+                    description:
+                      type: "string"
+                      description: "Descrição detalhada do conteúdo (max 280 caracteres)"
+              tiktok_content:
+                type: "array"
+                description: "Conteúdo planejado para TikTok"
+                items:
+                  type: "object"
+                  required: ["format", "title", "description"]
+                  properties:
+                    format:
+                      type: "string"
+                      enum: ["Video", "Challenge", "Duet", "Trend"]
+                    title:
+                      type: "string"
+                      description: "Título do conteúdo (max 50 caracteres)"
+                    description:
+                      type: "string"
+                      description: "Descrição detalhada do conteúdo (max 200 caracteres)"
+              youtube_content:
+                type: "array"
+                description: "Conteúdo planejado para YouTube"
+                items:
+                  type: "object"
+                  required: ["format", "title", "description"]
+                  properties:
+                    format:
+                      type: "string"
+                      enum: ["Short", "Video", "Live", "Premiere"]
+                    title:
+                      type: "string"
+                      description: "Título do conteúdo (max 100 caracteres)"
+                    description:
+                      type: "string"
+                      description: "Descrição detalhada do conteúdo (max 500 caracteres)"
+              hashtags:
+                type: "array"
+                description: "Hashtags do dia (2-5 hashtags)"
+                minItems: 2
+                maxItems: 5
+                items:
+                  type: "string"
+              text_to_search:
+                type: "string"
+                description: |
+                  Lista de termos relevantes para busca de imagens, separados por vírgula. SEMPRE prefixar com "Soccer" para evitar resultados não relacionados. DEVE incluir:
+                  - "Soccer" seguido do nome do Time
+                  - "Soccer" seguido do nome completo de qualquer pessoa mencionada
+                  - Qualquer local ou evento específico mencionado com contexto "Soccer"
+       

@@ -1,0 +1,18 @@
+agent:
+
+  name: coverage-live-markets-consumer
+  title: "Coverage - Live Markets Consumer"
+  description: "Workflow to consume markets from SportRadar."
+  context:
+    config-frequency: 10
+  workflows:
+
+    # bwin-sync-markets
+    - name: bwin-sync-markets
+      description: "sync-markets"
+      inputs:
+        country: "'br'"
+        competitionIds: "'102838'"
+        sportId: "'4'"
+      outputs:
+        sync-markets-odds-status: "$.get('workflow-status', False)"

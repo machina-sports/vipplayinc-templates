@@ -1,0 +1,61 @@
+mappings:
+
+  # coverage-mapping-polls-in-advance-control
+  - type: mapping
+    name: coverage-mapping-polls-in-advance-control
+    title: "Coverage - Mapping Polls In Advance Control"
+    description: "Mapping data from polls in advance control"
+    outputs:
+      agenda-required: |
+        $.get('_document', {}).get('agenda-required', []) if $.get('_document') else []
+      polls-control: |
+        $.get('_document', {}).get('polls-control', {}) if $.get('_document') else {}
+      polls-control-status: |
+        $.get('_document', {}).get('polls-control', {}).get('status', 'pending') if $.get('_document') else 'pending'
+
+  # coverage-mapping-polls-in-advance-service
+  - type: mapping
+    name: coverage-mapping-polls-in-advance-service
+    title: "Coverage - Mapping Polls In Advance Service"
+    description: "Mapping data from polls in advance service"
+    outputs:
+      agenda-required: |
+        []
+      content-group: |
+        f"{$.('script_name')}"
+      content-name: |
+        f"{$.('date_prefix')}-{$.('team_home_name')}-X-{$.('team_away_name')}-POLLS_IN_ADVANCE"
+      coverage-indexes: |
+        [
+          {
+            "title": "Before Match Polls",
+            "description": "Pre-match predictions and fan engagement polls",
+            "index": f"{$.('date_prefix')}-{$.('team_home_name')}-X-{$.('team_away_name')}-POLLS_IN_ADVANCE-BEFORE_MATCH"
+          },
+          {
+            "title": "First Half Polls", 
+            "description": "Polls focused on first half predictions and analysis",
+            "index": f"{$.('date_prefix')}-{$.('team_home_name')}-X-{$.('team_away_name')}-POLLS_IN_ADVANCE-FIRST_HALF"
+          },
+          {
+            "title": "Half Time Polls",
+            "description": "Half-time break polls and second half predictions",
+            "index": f"{$.('date_prefix')}-{$.('team_home_name')}-X-{$.('team_away_name')}-POLLS_IN_ADVANCE-HALF_TIME"
+          },
+          {
+            "title": "Second Half Polls",
+            "description": "Second half focused polls and match outcome predictions",
+            "index": f"{$.('date_prefix')}-{$.('team_home_name')}-X-{$.('team_away_name')}-POLLS_IN_ADVANCE-SECOND_HALF"
+          }
+        ]
+
+  # coverage-mapping-polls-in-advance-results
+  - type: mapping
+    name: coverage-mapping-polls-in-advance-results
+    title: "Coverage - Mapping Polls In Advance Results"
+    description: "Mapping data from polls in advance results"
+    outputs:
+      polls-results: |
+        [
+          *$.get('_content-polls', [])
+        ] 

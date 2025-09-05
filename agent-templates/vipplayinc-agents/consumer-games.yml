@@ -1,0 +1,33 @@
+agent:
+
+  name: coverage-games-consumer
+  title: "Coverage - Games Consumer"
+  description: "Workflow to cover Games Consumer."
+  context:
+    config-frequency: 0.1
+  workflows:
+
+    # Workflow Event Update Long-Term
+    - name: "sportradar-soccer-update-longterm"
+      description: "Soccer Event Update Long-Term"
+      outputs:
+        soccer-event-update: "$.get('workflow-status', False)"
+        
+    # Workflow Event Update Pre-Live
+    - name: "sportradar-soccer-update-prelive"
+      description: "Soccer Event Update Pre-Live"
+      outputs:
+        soccer-event-update: "$.get('workflow-status', False)"
+
+    # Workflow Event Update Live
+    - name: "sportradar-soccer-update-live"
+      description: "Soccer Event Update Live"
+      outputs:
+        soccer-event-update: "$.get('workflow-status', False)"
+
+    # Workflow Event Update Post-Live
+    - name: "sportradar-soccer-update-postlive"
+      description: "Soccer Event Update Post-Live"
+      outputs:
+        soccer-event-update: "$.get('workflow-status', False)"
+        

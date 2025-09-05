@@ -1,0 +1,74 @@
+workflow:
+
+  name: coverage-quizzes-executor-custom
+  title: "Coverage - Quizzes Executor - Custom"
+  description: "Workflow to execute quizzes in a custom way."
+  context-variables:
+    debugger:
+      enabled: true
+    machina-ai:
+      api_key: "$TEMP_CONTEXT_VARIABLE_SDK_OPENAI_API_KEY"
+  inputs:
+    script-instructions: "$.get('script-instructions', 'Reproduce the following snippets as quizzes. You will receive text	option_0	option_1	option_2	correct_index and difficulty. You will need to reproduce them., ')"
+    content-group: "$.get('content-group', 'SPORTS_SOCCER_EVENT')"
+    content-name: "$.get('content-name', 'coverage-quizzes')"
+    content-topic: "$.get('content-topic', 'coverage')"
+    event_code: "$.get('event_code')"
+  outputs:
+    workflow-status: "$.get('workflow-status', 'skipped')"
+  tasks:
+  
+    # prompt-coverage-quizzes-executor
+    - type: prompt
+      name: prompt-coverage-quizzes-executor
+      description: "prompt-quizzes"
+      connector:
+        name: "machina-ai"
+        command: "invoke_prompt"
+        model: "gpt-4.1-mini"
+      inputs:
+        doc_context: |
+          [
+            "text	option_0	option_1	option_2	correct_index	difficulty",
+            "Which club has Won the most FIFA CWC titles?	Real Madrid	Barcelona	Boca Juniors	0	easy",
+            "Who is the current club to hold he FIFA CWC title?	Liverpool	Real Madrid	Manchester City	2	EASY",
+            "What staduim going to host the final of the FIFA CWC this year?	Mercedes-Benz Stadium in Atlanata	Hard Rock Stadium in Miami	MetLife Stadium in New Jearsy 	2	EASY",
+            "Who is the all time top scorer of FIFA CWC?	Leo Messi	Cristinao Roanldo	Robert Lewandowski	1	Medium",
+            "How this play ends?	Goal	GK Save	Out of target	1	Medium",
+            "Which non-European club has won the most FIFA CWC titles	Sao Paulo	River Plate	Corinthians	2	Medium",
+            "Which player of the following has not scored in the last CWC Final game?	Julian Alvarez	Earling Halland	Phil Foden	1	Medium",
+            "Who scored the winning goal in the 2020 FIFA CWC final?	Benjamin Pavard	Robert Lewandowski	Cristiano Ronaldo	0	Hard",
+            "Against which team did Messi score his first Ligue 1 goal while playing for PSG?	Nantes	Marseille	LOSC Lille	0	Hard"
+            "Guess the player	Leo Messi	Luis Suarez	Sergio Busquets	2	Hard"
+          ]
+        instruction: "$.get('script-instructions')"
+      outputs:
+        generated-content-quizzes: "$.get('questions', [])"
+
+    # 0 bulk-content-quizzes
+    - type: document
+      name: bulk-content-quizzes
+      description: "Bulk save the quizzes."
+      config:
+        action: "bulk-save"
+        embed-vector: false
+      document_name: "'content-quiz'"
+      documents:
+        items: "$.get('parsed_quizzes', [])"
+      inputs:
+        parsed_quizzes: |
+          [
+            {
+              **c,
+              "metadata": {
+                "content-group": "$.(content-group)",
+                "content-name": "$.(content-name)",
+                "content-topic": "$.(content-topic)",
+                "event_code": "$.(event_code)"
+              },
+              "version_control": {
+                "embed_image_status": "pending"
+              }
+            }
+            for c in $.get('generated-content-quizzes', [])
+          ]

@@ -1,0 +1,66 @@
+prompts:
+
+  # coverage-reporter-transfers-heading-prompt
+  - type: "prompt"
+    title: "Coverage - Reporter Transfers Heading"
+    name: "coverage-reporter-transfers-heading-prompt"
+    description: "Gera título e subtítulo (PT-BR) com foco em transferências de jogadores e impacto no confronto. Tom profissional, informativo e envolvente."
+    instruction: |
+      Atue como um analista que explica de forma objetiva como as transferências dos jogadores impactam o jogo.
+
+      **Normalização de Nomes:**
+      - Remova sufixos como "EC", "MG", "SP", "RJ", etc. (ex: "Cruzeiro EC MG" → "Cruzeiro")
+      - Use acentuação correta (ex: "Goias" → "Goiás")
+      - Normalize nomes de times e competições para seus formatos oficiais
+      - Exemplos:
+        * "EC Goias" → "Goiás"
+        * "Cruzeiro EC MG" → "Cruzeiro"
+        * "Atletico Mineiro" → "Atlético Mineiro"
+        * "Sao Paulo" → "São Paulo"
+
+      **Diretrizes Gerais:**
+      - Use apenas dados explicitamente fornecidos no contexto.
+      - Não invente status médicos, prazos de retorno ou estatísticas fictícias.
+      - Cite somente jogadores e equipes realmente mencionados.
+      - Evite especulações.
+      - Use markdown formatting.
+    schema:
+      title: "PostBlogPreviaTitulo"
+      description: "Estrutura para gerar o título e subtítulo com foco nas transferências do(s) jogador(es) e seu impacto no confronto."
+      type: "object"
+      properties:
+        title:
+          type: "string"
+          description: |
+            Gere um título curto e direto destacando transferências e impacto no jogo.
+            Moldes possíveis:
+            - "Transferências: [Jogador] desfalca [Time] contra [Adversário]"
+            - "[Time A] x [Time B]: baixa de [Jogador] muda cenário"
+            - "[Jogador] fora por transferência: efeito no duelo [Time A] x [Time B]"
+        subtitle:
+          type: "string"
+          description: |
+            Crie um subtítulo direto e factual sobre a(s) transferência(ões): status (se disponível), provável ausência e impacto tático no time.
+            - Use apenas informações explícitas no contexto (nome do jogador, posição, status como "fora", "dúvida" ou tipo de transferência quando citado).
+            - Se odds estiverem disponíveis, você PODE mencioná-las de forma secundária; não invente valores.
+            - Evite perguntas e especulações.
+        event_name:
+          type: "string"
+          description: "Nome do evento. Exemplo: 'Flamengo x Palmeiras'"
+        event_date_time:
+          type: "string"
+          description: "Data e horário do evento. Exemplo: 13 de Abril de 2025 às 16:00 (horário de brasilia)."
+        event_venue:
+          type: "string"
+          description: "Local do evento. Exemplo: 'Maracanã, Rio de Janeiro, Brasil'"
+        slug:
+          type: "string"
+          description: "Slug do evento"
+      required: 
+        - title
+        - subtitle
+        - event_name
+        - event_date_time
+        - event_venue
+        - slug
+            

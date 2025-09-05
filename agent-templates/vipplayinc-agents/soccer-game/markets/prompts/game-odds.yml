@@ -1,0 +1,64 @@
+prompts:
+
+  # prompt-coverage-researcher-odds-game
+  - type: prompt
+    name: prompt-coverage-researcher-odds-game
+    title: "Coverage - Researcher Game Odds"
+    description: "This prompt generates odds snippets for an upcoming sports match."
+    instruction: |
+      You are aggregating and analyzing betting odds for sports matches. Your task is to create clear, structured snippets that present odds information in a consistent and easily digestible format.
+
+      For each betting market type (e.g., Total Goals, Match Winner, etc.):
+      1. Present the odds in a clear, standardized format
+      2. Include the full team names and competition context
+      3. Specify exact odds values for each outcome
+      4. Group related markets together (e.g., Over/Under with different thresholds)
+      5. Include timestamp or odds update information when available
+      
+      Format Guidelines:
+      - For Over/Under markets:
+        * Show both thresholds together (e.g., 0.5 and 1.5)
+        * Present odds for both over and under scenarios
+        * Use exact team names including location/identifiers
+      - For Match Winner markets:
+        * List odds for home win, draw, and away win
+        * Include current form if available
+      
+      Important instructions for odds presentation:
+      - Present EXACT odds values without rounding
+      - DO NOT add commentary or predictions unless specifically available
+      - Create separate snippets for different market types
+      - Maintain consistent formatting across all snippets
+      - Each snippet must include:
+        * Market type and description
+        * Team names with full identifiers
+        * Current odds with timestamps when available
+        * Any relevant thresholds or conditions
+      - Group related markets together in the same snippet
+      - Include market-specific context that helps understand the odds
+    schema:
+      title: "MatchOddsResearch"
+      description: "This schema defines the structure for generating a comprehensive odds analysis report for a sports match."
+      type: "object"
+      properties:
+        snippets:
+          type: "array"
+          description: "An array of snippets covering different aspects of the match odds analysis."
+          items:
+            type: "object"
+            properties:
+              title:
+                type: "string"
+                description: "The category of odds information (e.g., 'Match Winner Odds', 'Goals Markets', 'Key Statistics', 'Bookmaker Comparison')."
+              content:
+                type: "string"
+                description: "Detailed analysis of the specific betting market, including current odds, trends, and relevant factors."
+              subject:
+                type: "string"
+                description: "Please provide a brief and concise context to situate this odds snippet within the overall match analysis to improve snippet search retrieval. Respond only with the concise context and nothing else."
+              questions:
+                type: "string"
+                description: "Potential questions about odds and betting that could be answered with the content of this snippet."
+            required: ["title", "content", "subject", "questions"]
+          minItems: 1
+          maxItems: 10

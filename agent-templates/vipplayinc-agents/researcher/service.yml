@@ -1,0 +1,170 @@
+workflow:
+
+  name: coverage-researcher-service
+  title: "Coverage - Researcher Service"
+  description: "Coverage Soccer Game Researcher Service"
+  context-variables:
+    debugger:
+      enabled: false
+  inputs:
+    event_code: |
+      $.get('event_code') or None
+    start_time_limit: |
+      $.get('start_time_limit') or 0
+    end_time_limit: |
+      $.get('end_time_limit') or 92
+    selected-topics: |
+      [topic.strip() for topic in $.get('selected-topics').split(',') if topic.strip()] if $.get('selected-topics') else ['injuries', 'statistics']
+  outputs:
+    workflow-status: |
+      $.get('event-exists') is not True and 'skipped' or 'executed'
+  tasks:
+
+    # load-event-by-code
+    - type: document
+      name: load-event-by-code
+      condition: "$.get('event_code') is not None"
+      config:
+        action: "search"
+        search-limit: 1
+        search-vector: false
+        search-sorters: ["start_time", 1]
+      filters:
+        metadata.event_code: "$.get('event_code')"
+      inputs:
+        name: "{'$in': ['soccer-game']}"
+      outputs:
+        event-exists: "len($.get('documents', [])) > 0 if $.get('documents') else False"
+        event-value: "$.get('documents')[0].get('value', {}) if $.get('documents') else None"
+        event-researcher: "$.get('documents')[0].get('value', {}).get('event-researcher', {}) if $.get('documents') else None"
+
+    # load-event-by-schedule
+    - type: document
+      name: load-event-by-schedule
+      condition: "$.get('event-exists') is not True"
+      config:
+        action: "search"
+        search-limit: 1
+        search-vector: false
+        search-sorters: ["value.version_control.updated", 1]
+      filters:
+        value.start_time: "{'$gt': datetime.utcnow() - timedelta(hours=$.get('start_time_limit')), '$lt': datetime.utcnow() + timedelta(hours=$.get('end_time_limit'))}"
+        value.event-researcher.finished: "{'$ne': True}"
+        value.event-researcher.processing: "{'$ne': True}"
+        value.version_control.processing: "{'$ne': True}"
+        value.version_control.finished: "{'$ne': True}"
+      inputs:
+        name: "{'$in': ['soccer-game']}"
+      outputs:
+        event-exists: "len($.get('documents', [])) > 0 if $.get('documents') else False"
+        event-value: "$.get('documents')[0].get('value', {}) if $.get('documents') else None"
+        event-researcher: "$.get('documents')[0].get('value', {}).get('event-researcher', {}) if $.get('documents') else None"
+
+    # map-event-soccer-game
+    - type: mapping
+      name: mapping-soccer-event-summary
+      condition: "$.get('event-exists') is True"
+      inputs:
+        event_selected: "$.get('event-value', {})"
+      outputs:
+        event_code: "$.get('event_code')"
+        event_title: "$.get('short_title')"
+        season_title: "$.get('season_title')"
+        team_home_name: "$.get('team_home_name')"
+        team_away_name: "$.get('team_away_name')"
+        team_home_id: "$.get('team_home_id')"
+        team_away_id: "$.get('team_away_id')"
+
+    # service-version-control
+    - type: document
+      name: service-version-control
+      condition: "$.get('event-exists') is True"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      documents:
+        soccer-game: |
+          {
+            **$.get('event-value', {}),
+            'event-researcher': {
+              **$.get('event-researcher', {}),
+              'processing': True
+            }
+          }
+      metadata:
+        event_code: "$.get('event_code')"
+
+    # map-date-prefix
+    - type: mapping
+      name: coverage-mapping-date-prefix
+      condition: "$.get('event-exists') is True"
+      outputs:
+        date_prefix: "$.get('date_prefix')"
+
+    # map-service-script
+    - type: mapping
+      name: coverage-researcher-service-map
+      condition: "$.get('event-exists') is True"
+      inputs:
+        date_prefix: "$.get('date_prefix')"
+        event_title: "$.get('event_title')"
+        season_title: "$.get('season_title')"
+        selected-topics: "$.get('selected-topics')"
+        team_home_id: "$.get('team_home_id')"
+        team_away_id: "$.get('team_away_id')"
+        team_home_name: "$.get('team_home_name', '').upper().replace(' ', '_')"
+        team_away_name: "$.get('team_away_name', '').upper().replace(' ', '_')"
+      outputs:
+        content-group: "$.get('content-group')"
+        content-name: "$.get('content-name')"
+        content-title: "$.get('content-title')"
+        coverage-indexes: "$.get('coverage-indexes')"
+
+    # save-content-script
+    - type: document
+      name: save-content-script
+      condition: "$.get('event-exists') is True"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      documents:
+        content-script: |
+          {
+            "name": "content-script",
+            "title": $.get('content-title'),
+            "indexes": $.get('coverage-indexes'),
+            "event_title": $.get('event_title'),
+            "season_title": $.get('season_title'),
+            "team_home_id": $.get('team_home_id'),
+            "team_away_id": $.get('team_away_id'),
+            "team_home_name": $.get('team_home_name'),
+            "team_away_name": $.get('team_away_name'),
+            "agenda-required": []
+          }
+      metadata:
+        content-group: "$.get('content-group')"
+        content-name: "$.get('content-name')"
+        event_code: "$.get('event_code')"
+
+    # service-version-control
+    - type: document
+      name: service-version-control
+      condition: "$.get('event-exists') is True"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      documents:
+        soccer-game: |
+          {
+            **$.get('event-value', {}),
+            'event-researcher': {
+              **$.get('event-researcher', {}),
+              'finished': True,
+              'processing': False
+            }
+          }
+      metadata:
+        event_code: "$.get('event_code')"

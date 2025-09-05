@@ -1,0 +1,26 @@
+agent:
+
+  name: coverage-polls-in-advance-consumer
+  title: "Coverage - Polls In Advance"
+  description: "Workflow to consume polls in advance before match starts."
+  context:
+    config-frequency: 0.2
+  workflows:
+
+    # coverage polls in advance service
+    - name: "coverage-polls-in-advance-service"
+      description: "Coverage Polls In Advance Service"
+      outputs:
+        polls-service-status: "$.get('workflow-status', False)"
+        
+    # coverage poll generator
+    - name: "coverage-polls-in-advance-generator"
+      description: "Coverage Polls In Advance Generator"
+      outputs:
+        polls-generator-status: "$.get('workflow-status', False)"
+
+    # coverage poll executor
+    - name: "coverage-polls-in-advance-executor"
+      description: "Coverage Polls In Advance Executor"
+      outputs:
+        polls-executor-status: "$.get('workflow-status', False)" 

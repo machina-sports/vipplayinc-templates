@@ -1,0 +1,68 @@
+agent:
+
+  name: coverage-live-narration-consumer
+  title: "Coverage - Live Narration Consumer"
+  description: "Workflow to consume researcher live narration."
+  context:
+    config-frequency: 1
+  context-variables:
+    event_code: "$.get('event_code')"
+  workflows:
+
+    # Checkin
+    - name: coverage-live-narration-use-event
+      description: "Use Event - Checkin"
+      inputs:
+        event_code: "$.get('event_code')"
+        version_control_updated: |
+          {
+            'processing': True,
+            'update-event-narration': 'processing'
+          }
+      outputs:
+        event_code: "$.get('event_code')"
+        event-checkin: "$.get('workflow-status', False)"
+
+    # Narration Execution
+    - name: coverage-live-narration-executor
+      description: "Event Execution"
+      inputs:
+        event_code: "$.get('event_code')"
+      outputs:
+        event-execution: "$.get('workflow-status', False)"
+        narration-summary: "$.get('narration-summary', '')"
+
+    # Polls Generation
+    - name: coverage-custom-polls-executor
+      description: "Event Execution"
+      inputs:
+        custom-context: "$.get('narration-summary', '')"
+        custom-instruction: "''"
+        event_code: "$.get('event_code')"
+        match_context: "'disabled'"
+      outputs:
+        event-execution: "$.get('workflow-status', False)"
+
+    # Quizzes Generation
+    - name: coverage-custom-quizzes-executor
+      description: "Event Execution"
+      inputs:
+        custom-context: "$.get('narration-summary', '')"
+        custom-instruction: "''"
+        event_code: "$.get('event_code')"
+        match_context: "'disabled'"
+      outputs:
+        event-execution: "$.get('workflow-status', False)"
+
+    # Checkout
+    - name: coverage-live-narration-use-event
+      description: "Use Event - Checkout"
+      inputs:
+        event_code: "$.get('event_code')"
+        version_control_updated: |
+          {
+            'processing': False,
+            'update-event-narration': 'processed'
+          }
+      outputs:
+        event-checkout: "$.get('workflow-status', False)"

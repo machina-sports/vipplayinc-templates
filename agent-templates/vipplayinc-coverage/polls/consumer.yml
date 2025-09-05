@@ -1,0 +1,20 @@
+agent:
+
+  name: coverage-polls-consumer
+  title: "Coverage - Polls"
+  description: "Workflow to consume polls."
+  context:
+    config-frequency: 0.2
+  workflows:
+
+    # coverage poll generator
+    - name: "coverage-polls-generator"
+      description: "Coverage Polls Generator"
+      outputs:
+        polls-generator-status: "$.get('workflow-status', False)"
+
+    # coverage poll executor
+    - name: "coverage-polls-executor"
+      description: "Coverage Polls Executor"
+      outputs:
+        polls-executor-status: "$.get('workflow-status', False)"

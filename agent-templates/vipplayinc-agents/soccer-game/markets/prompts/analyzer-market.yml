@@ -1,0 +1,40 @@
+prompts:
+
+  # prompt-researcher-odds-select-event
+  - type: prompt
+    name: prompt-researcher-odds-select-event
+    title: "Coverage - Researcher Odds - Prompt Select Event"
+    description: "Analyzes user questions for the Sportingbet chat bot."
+    instruction: |
+      Analyze the user's question and return the betting market they are asking about.
+    schema:
+      title: "ChatAnalysisMarket"
+      description: "This schema defines the structure for generating chat analysis market responses."
+      type: "object"
+      required: [
+        "code",
+        "title",
+        "other_events",
+        "has_found_event"
+      ]
+      properties:
+        code:
+          type: "string"
+          description: |
+            Returns the match code from the id field, example 7599838
+        title:
+          type: "string"
+          description: |
+            Returns the match title.
+        other_events:
+          type: "array"
+          description: |
+            Returns other matches that the user might be asking about.
+          items:
+            type: "string"
+            description: |
+              Returns the match title.
+        has_found_event:
+          type: "boolean"
+          description: |
+            Returns whether the match was found.

@@ -1,0 +1,43 @@
+prompts:
+
+  # coverage-reporter-injuries-heading-prompt
+  - type: "prompt"
+    title: "Coverage - Reporter Injuries Heading"
+    name: "coverage-reporter-injuries-heading-prompt"
+    description: "Gera título e subtítulo (PT-BR) sobre lesões e seus impactos, em tom jornalístico, curto e natural."
+    instruction: |
+      Escreva título e subtítulo com base APENAS nas informações do contexto.
+      - Título: manchete curta e natural (até 10 palavras), sem fórmulas fixas. Destaque o essencial (lesões e impacto no confronto, times/adversário ou mando/estádio quando relevante).
+      - Subtítulo: 1 a 2 frases objetivas que detalhem status/prognóstico e impacto tático quando estiverem no contexto. Você pode mencionar odds apenas se estiverem explícitas no contexto. Evite perguntas.
+      Não invente diagnósticos, prazos ou números. Evite especulações e não use emojis. Priorize clareza e concisão.
+    schema:
+      title: "PostBlogPreviaTitulo"
+      description: "Estrutura para gerar o título e subtítulo com foco nas lesões do(s) jogador(es) e seu impacto no confronto."
+      type: "object"
+      properties:
+        title:
+          type: "string"
+          description: "Manchete curta e natural (até 10 palavras), destacando lesões e impacto no confronto. Evite fórmulas fixas."
+        subtitle:
+          type: "string"
+          description: "1 a 2 frases objetivas com status/prognóstico (se disponível) e impacto tático. Mencione odds somente se presentes no contexto. Sem perguntas ou especulação."
+        event_name:
+          type: "string"
+          description: "Nome do evento. Exemplo: 'Flamengo x Palmeiras'"
+        event_date_time:
+          type: "string"
+          description: "Data e horário do evento. Exemplo: 13 de Abril de 2025 às 16:00 (horário de brasilia)."
+        event_venue:
+          type: "string"
+          description: "Local do evento. Exemplo: 'Maracanã, Rio de Janeiro, Brasil'"
+        slug:
+          type: "string"
+          description: "Slug do evento"
+      required: 
+        - title
+        - subtitle
+        - event_name
+        - event_date_time
+        - event_venue
+        - slug
+            

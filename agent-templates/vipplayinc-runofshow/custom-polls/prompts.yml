@@ -1,0 +1,152 @@
+prompts:
+
+  # prompt-runofshow-custom-polls
+  - type: prompt
+    name: prompt-runofshow-custom-polls
+    title: "Run of Show - Custom Polls Executor"
+    description: "Generates engaging opinion polls for TV with basic match questions."
+    instruction: |
+        OBJECTIVE: Create engaging, ultra-short opinion polls based on current or historical match context.
+
+        GUIDELINES:
+        - Keep language simple and TV-friendly
+        - Focus on current match or clear historic topics
+        - No factual correctness required; it's audience opinion
+        - Max 50 chars per question, 25 chars per option
+        - Provide 2-4 options per question
+
+        IMAGE/TEXT SEARCH BRIEFING:
+        - Provide a comma-separated list of relevant terms for image search
+        - ALWAYS prefix with "Soccer" to avoid unrelated results
+        - Include team names, player full names, stadium, league, country, or city names when relevant
+    schema:
+      title: "PollContentEnglish"
+      description: |
+        TV POLL RULES:
+
+        OBJECTIVE:
+        - Fan engagement through opinions
+        - Match context as background
+        - Public decides answers
+
+        EASY GUIDELINES:
+        - Basic reactions
+        - Simple language
+        - Current match focus
+        - Casual viewer friendly
+
+        STRUCTURE:
+        - Short questions (Max 50 chars, Ex: "Who'll win today?", "Best player?")
+        - 2-4 brief options (Max 25 chars each)
+        - Varied question types
+      type: "object"
+      required: ["questions"]
+      properties:
+        questions:
+          type: "array"
+          minItems: 1
+          maxItems: 10
+          description: "Array of ULTRA-SHORT poll questions (max 50 chars) with brief options (max 25 chars)."
+          items:
+            type: "object"
+            required: [
+              "title",
+              "title_es",
+              "title_it",
+              "title_de",
+              "title_fr",
+              "title_pt",
+              "title_ja",
+              "title_he",
+              "title_ar",
+              "answers",
+              "difficulty",
+              "text_to_search"
+            ]
+            properties:
+              title:
+                type: "string"
+                description: "ULTRA-SHORT question (max 50 chars) for TV/app display."
+              difficulty:
+                type: "string"
+                description: "Difficulty level: EASY questions only"
+                enum: ["EASY", "MEDIUM", "HARD"]
+              text_to_search:
+                type: "string"
+                description: |
+                  A comma-separated list of relevant terms for image search. ALWAYS prefix with "Soccer" to avoid unrelated results. MUST include:
+                  - "Soccer" followed by Team name (e.g., "Soccer AC Milan" not just "Milan")
+                  - "Soccer" followed by any mentioned person's full name
+                  - Any specific venue or event mentioned with "Soccer" context
+              title_es:
+                type: "string"
+                description: "SHORT and ENGAGING question in Spanish."
+              title_it:
+                type: "string"
+                description: "SHORT and ENGAGING question in Italian."
+              title_de:
+                type: "string"
+                description: "SHORT and ENGAGING question in German."
+              title_fr:
+                type: "string"
+                description: "SHORT and ENGAGING question in French."
+              title_pt:
+                type: "string"
+                description: "SHORT and ENGAGING question in Brazilian Portuguese."
+              title_ja:
+                type: "string"
+                description: "SHORT and ENGAGING question in Japanese."
+              title_he:
+                type: "string"
+                description: "SHORT and ENGAGING question in Hebrew."
+              title_ar:
+                type: "string"
+                description: "SHORT and ENGAGING question in Arabic."
+              answers:
+                type: "array"
+                description: "2-4 ULTRA-SHORT options (max 25 chars each) for TV/app display."
+                minItems: 2
+                maxItems: 4
+                items:
+                  type: "object"
+                  description: "Brief answer option (max 25 chars)."
+                  required: [
+                    "title",
+                    "title_es",
+                    "title_it",
+                    "title_de",
+                    "title_fr",
+                    "title_pt",
+                    "title_ja",
+                    "title_he",
+                    "title_ar"
+                  ]
+                  properties:
+                    title:
+                      type: "string"
+                      description: "ULTRA-SHORT option (max 25 chars)."
+                    title_es:
+                      type: "string"
+                      description: "SHORT option in Spanish."
+                    title_it:
+                      type: "string"
+                      description: "SHORT option in Italian."
+                    title_de:
+                      type: "string"
+                      description: "SHORT option in German."
+                    title_fr:
+                      type: "string"
+                      description: "SHORT option in French."
+                    title_pt:
+                      type: "string"
+                      description: "SHORT option in Brazilian Portuguese."
+                    title_ja:
+                      type: "string"
+                      description: "SHORT option in Japanese."
+                    title_he:
+                      type: "string"
+                      description: "SHORT option in Hebrew."
+                    title_ar:
+                      type: "string"
+                      description: "SHORT option in Arabic."
+

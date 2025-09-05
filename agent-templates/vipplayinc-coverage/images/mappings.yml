@@ -1,0 +1,92 @@
+mappings:
+
+  # coverage-mapping-images-control
+  - type: mapping
+    name: coverage-mapping-images-control
+    title: "Coverage - Mapping Images Control"
+    description: "Mapping data from images"
+    outputs:
+      agenda-required: |
+        $.get('_document', {}).get('agenda-required', []) if $.get('_document') else []
+      images-control: |
+        $.get('_document', {}).get('images-control', {}) if $.get('_document') else {}
+      images-control-status: |
+        $.get('_document', {}).get('images-control', {}).get('status', 'pending') if $.get('_document') else 'pending'
+      websearch-request: |
+        $.get('_document', {}).get('websearch-request', {}) if $.get('_document') else {}
+      websearch-request-status: |
+        $.get('_document', {}).get('websearch-request', {}).get('status', 'pending') if $.get('_document') else 'pending'
+      websearch-request-queries: |
+        [
+          {
+            'metadata': {
+              'content-group': $.get('_metadata', {}).get('content-group', ''),
+              'content-name': $.get('_metadata', {}).get('content-name', ''),
+              'content-topic': $.get('_metadata', {}).get('content-topic', ''),
+              'event_code': $.get('_metadata', {}).get('event_code', '')
+            },
+            'images-control': {
+              'finished': False,
+              'processing': False,
+              'updated': datetime.utcnow()
+            },
+            'web-search-udm': $.get('_document', {}).get('agenda-object', {}).get('web-search-udm', 12),
+            'web-search-limit': $.get('_document', {}).get('agenda-object', {}).get('web-search-limit', 10),
+            'web-search-topic': item.get('type'),
+            'web-search-query': item.get('query'),
+          }
+          for item in $.get('_document', {}).get('agenda-object', {}).get('search_queries', [])
+        ]
+  
+  # coverage-mapping-image-research-items
+  - type: mapping
+    name: coverage-mapping-image-research-items
+    title: "Coverage - Mapping Image Research Items"
+    description: "Mapping data from image research items"
+    outputs:
+      web-research-items: |
+        [
+          {
+            **d.get('value', {}),
+            'metadata': d.get('metadata', {})
+          }
+          for d in $.get('_documents', [])
+          if d.get('name', '') == 'web-image'
+        ]
+      web-research-finished: |
+        [
+          item
+          for item in $.get('_documents', [])
+          if item.get('value', {}).get('version_control', {}).get('finished', False) == True
+        ]
+      web-research-processing: |
+        [
+          item
+          for item in $.get('_documents', [])
+          if item.get('value', {}).get('version_control', {}).get('processing', False) == True
+        ]
+      web-research-pending: |
+        [
+          item
+          for item in $.get('_documents', [])
+          if item.get('value', {}).get('version_control', {}).get('finished', False) == False
+        ]
+
+  # coverage-mapping-images-service
+  - type: mapping
+    name: coverage-mapping-images-service
+    title: "Coverage - Mapping Images Service"
+    description: "Mapping data from images service"
+    outputs:
+      agenda-required: |
+        [
+          f"{$.('date_prefix')}_{$.('team_home_name')}_X_{$.('team_away_name')}_QUIZZES"
+        ]
+      content-group: |
+        f"{$.('script_name')}"
+      content-name: |
+        f"{$.('date_prefix')}_{$.('team_home_name')}_X_{$.('team_away_name')}_IMAGES"
+      coverage-indexes: |
+        [
+          f"{$.('date_prefix')}_{$.('team_home_name')}_X_{$.('team_away_name')}_IMAGES"
+        ]

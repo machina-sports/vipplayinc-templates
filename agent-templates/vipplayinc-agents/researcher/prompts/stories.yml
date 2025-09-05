@@ -1,0 +1,165 @@
+prompts:
+
+  # coverage-researcher-stories-selector
+  - type: prompt
+    name: coverage-researcher-stories-selector
+    title: "Coverage - Researcher Stories Selector"
+    description: "Check if the story is already registered in the system and ensure it is in English."
+    instruction: |
+      Check if the story is already registered in the available stories list. Your task is to:
+
+      1. Story Registration and Topic Categorization:
+         - Identify the main player, team, or subject of the story
+         - Determine the appropriate topic category based on these guidelines:
+
+         a) Rumors Category:
+            - Transfer news and speculation
+            - Loan deals and developments  
+            - Contract negotiations and renewals
+            - Player movement between teams
+            - Future career discussions
+            - All transfer-related content and rumors
+            
+         b) Injuries Category:
+            - Player injury reports and updates
+            - Recovery progress information
+            - Return timeline estimates
+            - Medical assessments
+            - Fitness updates before matches
+            - Disciplinary actions and bans
+            - Red card suspensions
+            - Yellow card accumulations
+            - Off-field incident suspensions
+            - Appeals and decisions
+            - Player availability status (injured or suspended)
+            
+         c) Players-to-watch Category:
+            - Outstanding player performances
+            - Key player availability updates
+            - Player achievements and records
+            - Form analysis and statistics
+            - Player impact on upcoming matches
+            
+         d) Odds-markets Category:
+            - Match betting odds and analysis
+            - Market movements and trends
+            - Betting-related statistics
+            - Probability assessments
+            - Odds comparisons
+            
+         e) Milestones Category:
+            - Team and player records
+            - Career achievements
+            - Historic moments
+            - Season landmarks
+            - Special commemorations
+            
+         f) General-stories Category:
+            - Match previews and lineups
+            - Team news and squad updates
+            - Coaching changes
+            - Team statistics and analysis
+            - Crisis or major team issues
+
+      2. Story Organization Rules:
+         - Each player should have their own individual story for player-specific topics
+         - Do not combine multiple players into a single story unless absolutely necessary
+         - Keep stories focused on a single theme or event
+         - Maintain clear topic boundaries - don't mix different categories
+         - For team-level stories, ensure clear focus on main subject
+         - Split content if it covers multiple distinct topics or players
+    schema:
+      title: "StorySelector"
+      description: "Check if the story is already registered in the system and ensure it will be processed in English."
+      type: "object"
+      properties:
+        story-id:
+          type: "string"
+          description: "The unique identifier of the story (if exists)."
+        story-found:
+          type: "boolean"
+          description: "True if the story is already registered in the available stories, False if a new story needs to be created."
+
+  # coverage-researcher-stories-enricher
+  - type: prompt
+    name: coverage-researcher-stories-enricher
+    title: "Coverage - Researcher Stories Enricher"
+    description: "Enrich or update an existing story with new information, or create a new story if none exists"
+    instruction: |
+      Your task is to enrich or create a story based on the provided information:
+
+      1. Story Processing and Focus:
+         If an existing story is provided (_1-story-if-exists contains the story):
+         - Verify the story maintains single-player/subject focus
+         - Review the existing story content and structure
+         - Analyze the new information from _2-new-information
+         - Only integrate information relevant to the specific player/subject
+         - Ensure topic consistency (don't mix injury news with transfer rumors)
+         - Keep the most recent and relevant information
+         - Update the title to reflect the specific focus
+         - Maintain consistent style and tone
+
+         If no existing story (_1-story-if-exists is empty):
+         - Create a new story focused on a single player/subject
+         - Ensure the story stays within its designated topic category
+         - Include only relevant information for the specific focus
+         - Structure the content chronologically when possible
+         - Create a clear, specific title that identifies the player/subject
+
+         Story Focus Guidelines:
+         - Each story should focus on ONE player for player-specific topics
+         - For general stories, maintain a single theme or event focus
+         - Remove any information about other players that should be in separate stories
+         - Keep the narrative focused and avoid tangential information
+
+      2. Language Requirements:
+         - All content must be in English
+         - If source content is not in English, translate while preserving meaning
+         - Maintain professional sports journalism style
+         - Keep technical accuracy in sports terms
+
+      3. Content Guidelines:
+         - Focus on factual information
+         - Include relevant statistics when available
+         - Maintain chronological or logical flow
+         - Highlight key developments or changes
+         - Provide context for new information
+         - Remove outdated or superseded information
+
+      4. Output Format:
+         - Clear, concise title reflecting main story focus
+         - Well-structured content with logical paragraphs
+         - Coherent narrative that integrates all relevant information
+         - Brief subject line for context and searchability
+
+    schema:
+      title: "StoryEnricher"
+      description: "Enrich existing story or create new story from provided content, ensuring English language and proper integration of information."
+      type: "object"
+      properties:
+        story-title:
+          type: "string"
+          description: "The title of the story, updated if necessary based on new information."
+        story-content:
+          type: "string"
+          description: "The enriched or new story content, incorporating all relevant information in a coherent narrative."
+        story-subject:
+          type: "string"
+          description: "A brief summary of the story's main focus and context for search purposes."
+        story-relevance:
+          type: "string"
+          description: "The relevance of the story."
+          enum:
+            - "high"
+            - "medium"
+            - "low"
+        story-topic:
+          type: "string"
+          description: "The main topic category of the story."
+          enum:
+            - "rumors"              # Transfer news, loan deals, contract negotiations, all transfer-related content
+            - "injuries"            # Player injuries, recovery updates, medical reports, suspensions, player availability
+            - "players-to-watch"    # Key player focus, performance highlights
+            - "odds-markets"        # Betting odds, market analysis, probabilities
+            - "milestones"         # Team/player records, achievements, historic moments
+            - "general-stories"     # Team news, match previews, results, statistics

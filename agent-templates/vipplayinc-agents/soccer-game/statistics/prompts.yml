@@ -1,0 +1,226 @@
+prompts:
+
+  # coverage-researcher-statistics-prompt
+  - type: prompt
+    name: coverage-researcher-statistics-prompt
+    title: "Coverage - Researcher Statistics Prompt"
+    description: "Generate structured analysis snippets focusing on a team's performance in their last match"
+    instruction: "Generate structured analysis snippets focusing on a team's performance in their last match"
+    schema:
+      title: "SoccerLastMatch"
+      description: "Analysis structure for team performance in their last match in soccer context"
+      type: "object"
+      properties:
+        key_players:
+          type: "array"
+          description: "Summary of key players' performances in the match"
+          items:
+            type: "object"
+            properties:
+              title:
+                type: "string"
+                description: "Title of the key players' performances in the match"
+              content:
+                type: "string"
+                description: |
+                  Data-driven analysis of key players' performances using available statistics:
+                  
+                  Available Statistics for Each Player:
+                  1. Match Status and Basic Info:
+                     - starter (true/false)
+                     - substituted_in (minute)
+                     - substituted_out (minute)
+                     - team_name (with proper formatting)
+                     - position
+                  
+                  2. Attacking Statistics:
+                     - goals_scored (including goals_by_head)
+                     - assists
+                     - shots_on_target
+                     - shots_off_target
+                     - shots_blocked
+                     - offsides
+                  
+                  3. Set Pieces and Creation:
+                     - corner_kicks (taken and scored)
+                     - free_kicks
+                     - assists_from_corners
+                     - assists_from_free_kicks
+                  
+                  4. Discipline and Defense:
+                     - yellow_cards (with minute)
+                     - red_cards (with minute)
+                     - yellow_red_cards
+                     - fouls_committed
+                     - fouls_suffered
+                     - own_goals
+                  
+                  Structure Requirements:
+                  1. Title Format:
+                     - Must include team name
+                     - Highlight key achievement (goals/assists/cards)
+                     - Example: "[Team Name]: [Key Achievement] at [Venue/Context]"
+                  
+                  2. Content Organization:
+                     - Group by team (home/away)
+                     - Start with match result and venue
+                     - Organize by impact (scorers → creators → defenders)
+                     - Include all substitutions with exact times
+                  
+                  3. Player Analysis Requirements:
+                     - Full name with proper accents
+                     - Starter/substitute status with exact minute
+                     - Minimum 3 statistics per key player
+                     - Link related events (assist to goal connection)
+                     - Include context (home/away, score at time of event)
+                  
+                  4. Statistical Context:
+                     - Compare to team averages when relevant
+                     - Mention if stat is season-best/worst
+                     - Include head-to-head history for rivalries
+                     - Reference stadium/attendance impact
+                  
+                  5. Substitution Analysis:
+                     - Group by team and chronological order
+                     - Include tactical impact of changes
+                     - Note any forced changes (injuries/cards)
+                     - Maximum substitution details per team
+                  
+                  Example Output:
+                  "[Team Name]: Key Players Analysis in [Result] at [Venue]
+                  
+                  In the match played on [weekday], [date] at [time], at [venue], for matchday [round] of [competition], [home team] [won/lost to] [away team] by [score].
+                  
+                  [Player Name] led the offensive actions with a standout performance: [X] shots on target, the highest in the match, plus [Y] goal(s) and [Z] corner kicks. Regarding discipline, received a [color] card at [minute] minutes of the [period] half.
+                  
+                  The manager made important changes throughout the game:
+                  - At [minute]', [Player In] replaced [Player Out] for [tactical objective]
+                  - [Player Out] made way for [Player In] at [minute]' after [substitution reason]
+                  - Double change at [minute]': [Players In] replacing [Players Out] seeking [tactical objective]
+                  
+                  Regarding discipline, the team had a [disciplinary assessment] night:
+                  - [Color] Cards: [Player] ([minute]') and [Player] ([minute]')
+                  - [Color] Cards: [Player] ([minute]') and [Player] ([minute]')"
+                  
+                  Example Format:
+                  "Match Result: Team A 2-0 Team B
+                  
+                  Attacking Players:
+                  Player X (starter, 90 minutes):
+                  - 2 shots on target, 2 shots off target
+                  - 1 yellow card
+                  
+                  Defensive Players:
+                  Player Y (substituted at 75'):
+                  - 1 goal scored
+                  - 1 assist
+                  
+                  Complete Lineup:
+                  Starters: Player A, Player B, Player C...
+                  Substitutions: Player D (65'), Player E (75')"
+              subject:
+                type: "string"
+                description: "Please provide a brief and concise context to situate this snippet within the general match analysis to improve snippet search retrieval. Respond only with the concise context and nothing else."
+            required: ["title", "content", "subject"]
+          minItems: 1
+          maxItems: 10
+        snippets:
+          type: "array"
+          description: "Analysis snippets based on statistical categories, focusing on team performance in their last match"
+          items:
+            type: "object"
+            properties:
+              title:
+                type: "string"
+                description: "Title of the statistical analysis in the match"
+              content:
+                type: "string"
+                description: |
+                  Statistical analysis focusing on the team's performance in their last match:
+                  
+                  1. Match Information (wrapped_event_status_summary):
+                     - Teams: Full names with proper formatting
+                     - Score: Current/Final with proper team order
+                     - Competition: Full name, round, season
+                     - Venue: Complete name with city
+                  
+                  2. Match Conditions (wrapped_match_conditions):
+                     - Weather conditions
+                     - Pitch status
+                     - Attendance figures
+                     - Referee information
+                  
+                  3. Broadcast Information (wrapped_broadcast_info):
+                     - Channel details
+                     - Coverage region
+                  
+                  4. Team Statistics Categories:
+                     A. Possession and Control (wrapped_match_statistics):
+                        - Ball possession percentage
+                        - Total passes
+                        - Pass accuracy
+                        - Territory control
+                     
+                     B. Attacking Efficiency:
+                        - Total shots
+                        - Shots on target
+                        - Shots off target
+                        - Blocked shots
+                        - Shot conversion rate
+                     
+                     C. Set Pieces Performance:
+                        - Corner kicks (taken/successful)
+                        - Free kicks (direct/indirect)
+                        - Penalty kicks
+                        - Goal kicks
+                     
+                     D. Disciplinary Record (wrapped_match_cards):
+                        - Yellow cards (with minutes)
+                        - Red cards (with minutes)
+                        - Total fouls
+                        - Offsides
+                  
+                  Title Requirements:
+                  1. Must include primary team name
+                  2. Highlight key statistical achievement
+                  3. Include venue for context
+                  Example: "[Team Name]: [Key Stat Achievement] at [Venue]"
+                  
+                  Content Structure Requirements:
+                  1. Statistical Presentation:
+                     - Use exact numbers and percentages
+                     - Compare home vs away stats
+                     - Highlight significant disparities
+                     - Include context (venue/weather impact)
+                  
+                  2. Narrative Flow:
+                     - Start with match context
+                     - Progress through key statistics
+                     - Connect stats to match outcome
+                     - Maximum 4 focused paragraphs
+                  
+                  3. Formatting Standards:
+                     - Team Names: Include proper accents, remove unnecessary suffixes
+                     - Numbers: Use proper decimal places
+                     - Times: 24-hour format (HH:MM)
+                     - Dates: DD/MM/YYYY format
+                  
+                  Example Output:
+                  "[Team Name]: Statistical Analysis of [Result] at [Venue]
+                  
+                  In the match played on [weekday], [date] at [time], at [venue], valid for matchday [round] of [competition], [home team] [result] [away team] by [score]. The match, which had an attendance of [number] fans, was officiated by referee [name].
+                  
+                  In tactical aspects, [dominant team] controlled the action with [X]% ball possession, against [Y]% for the opponent. The offensive volume was [comparative analysis], with [team A] having [N] shots ([X] on target) and [team B] reaching [M] attempts ([Y] on target).
+                  
+                  In set pieces, balanced numbers: [N] corners for each side. [Team] made better use of these opportunities, converting [X] into a goal through [type of goal] by [Player].
+                  
+                  The match had [intensity] intensity, reflected in [N] fouls called ([X] by [team A], [Y] by [team B]). The referee had to show [total] cards, with [distribution of cards].
+                  
+                  Match conditions favored a [type] game, with [weather] and pitch in [condition] condition. The broadcast was handled by [channel], taking the match to [coverage region]."
+              subject:
+                type: "string"
+                description: "Please provide a brief and concise context to situate this snippet within the general match analysis to improve snippet search retrieval. Respond only with the concise context and nothing else."
+            required: ["title", "content", "subject"]
+          minItems: 1
+          maxItems: 10
+      required: ["snippets", "key_players"]

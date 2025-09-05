@@ -1,0 +1,170 @@
+prompts:
+
+  # prompt-coverage-quizzes-from-history-analysis
+  - type: prompt
+    name: prompt-coverage-quizzes-from-history-analysis
+    title: "Coverage - Historical Quiz Analysis"
+    description: "Generate engaging historical trivia questions based on research content with specific statistics, player names, venues, dates, and factual details. Focus on creating quiz questions from quantifiable information."
+    schema:
+      title: "SoccerCoverageHistoricalQuizAnalysis"
+      description: "Generate engaging historical trivia questions based on research content with specific statistics, player names, venues, dates, and factual details. Each quiz question must be based on quantifiable information such as goals scored, match dates, specific venues, player statistics, transfer fees, or historical records. Focus on creating multiple-choice questions with clear correct answers."
+      type: "object"
+      properties:
+        snippets:
+          type: "array"
+          description: "Historical quiz questions containing specific statistics, player names, venues, dates, scores, and concrete facts. Each snippet must include trivia questions with multiple choice answers based on factual information."
+          minItems: 1
+          maxItems: 10
+          items:
+            type: "object"
+            required:
+              - title
+              - content
+              - subject
+              - script_code
+              - start_index
+              - end_index
+              - quiz_type
+            properties:
+              content:
+                type: "string"
+                description: "Detailed content with specific data points including: exact dates, scores, player names, venues, statistics (goals, assists, appearances), transfer fees, attendance figures, or historical records. Must contain at least 3 concrete data points (numbers, names, dates, or specific facts). Example: 'Thierry Henry scored 39 goals in 38 Premier League appearances during the 2003-04 season at Highbury, including a memorable hat-trick against Liverpool on April 9, 2004, helping Arsenal achieve their unbeaten season with 26 wins and 12 draws.'"
+              title:
+                type: "string"
+                description: "Specific title highlighting the main data point or statistic, including numbers, player names, or specific achievements. Example: 'Thierry Henry's 39-Goal 2003-04 Season Record' or 'Arsenal's 49-Game Unbeaten Run at Highbury'"
+              subject:
+                type: "string"
+                description: "Specific subject identification including full names of players/managers, exact team names, competition names, and the main statistical or factual focus. Example: 'Thierry Henry - Arsenal FC - 2003-04 Premier League goalscoring record'"
+              script_code:
+                type: "string"
+                description: |
+                  Content type code that categorizes the snippet. Categories include:
+                  Current news: PLAYER_TRANSFER_NEWS, TEAM_TRANSFER_NEWS, TEAM_MERCHANDISE_EVENT, PLAYER_RELEASE_EVENT
+                  Historical facts: PLAYER_HISTORIC_STATS, TEAM_HISTORIC_ACHIEVEMENT, LEGENDARY_PLAYER_CAREER, HISTORIC_SEASON_REVIEW
+                  Competition records: COMPETITION_RECORD_GOALS, COMPETITION_RECORD_TITLES, HISTORIC_DERBY_STATS
+                  Player achievements: PLAYER_AWARDS_HISTORY, PLAYER_SEASON_STATS, PLAYER_COMPETITION_RECORDS
+                  Team history: TEAM_GOLDEN_ERA, TEAM_TROPHY_HISTORY, TEAM_HISTORIC_LINEUP
+                enum:
+                  - PLAYER_TRANSFER_NEWS
+                  - TEAM_TRANSFER_NEWS
+                  - TEAM_MERCHANDISE_EVENT
+                  - PLAYER_RELEASE_EVENT
+                  - PLAYER_HISTORIC_STATS
+                  - TEAM_HISTORIC_ACHIEVEMENT
+                  - LEGENDARY_PLAYER_CAREER
+                  - HISTORIC_SEASON_REVIEW
+                  - COMPETITION_RECORD_GOALS
+                  - COMPETITION_RECORD_TITLES
+                  - HISTORIC_DERBY_STATS
+                  - PLAYER_AWARDS_HISTORY
+                  - PLAYER_SEASON_STATS
+                  - PLAYER_COMPETITION_RECORDS
+                  - TEAM_GOLDEN_ERA
+                  - TEAM_TROPHY_HISTORY
+                  - TEAM_HISTORIC_LINEUP
+              start_index:
+                type: "integer"
+                description: "The start index of the snippet in the transcript that contains the subject"
+              end_index:
+                type: "integer"
+                description: "The end index of the snippet in the transcript that contains the subject"
+              quiz_type:
+                type: "string"
+                description: "The type of quiz question being generated (e.g., 'Trivia', 'Fact', 'Multiple Choice')"
+                enum:
+                  - "Trivia"
+                  - "Fact"
+                  - "Multiple Choice"
+
+  # prompt-coverage-quizzes-from-history-generator
+  - type: prompt
+    name: prompt-coverage-quizzes-from-history-generator
+    title: "Coverage - Historical Quiz Generator"
+    description: "Generate editorial briefing script for planning historical quiz content based on a specific topic, competition, or subject matter"
+    schema:
+      title: "PromptTopicHistoricalQuizCoverageGenerator"
+      description: "Generate editorial briefing script for planning historical quiz coverage based on a specific topic, which can be historical matches, competition trivia, legendary players, or general football history"
+      required:
+        - title
+        - content
+        - subject
+        - script_code
+        - coverage_type
+        - search_queries
+      type: "object"
+      properties:
+        content:
+          type: "string"
+          description: "Brief editorial outline highlighting key focus points and angles for the topic coverage, including specific areas to research and data points to gather"
+        title:
+          type: "string"
+          description: "Engaging title that clearly represents the topic or subject being researched"
+        subject:
+          type: "string"
+          description: "Main focus of the coverage (e.g., 'UEFA Nations League statistics analysis', 'Premier League top scorers history', 'Champions League knockout records')"
+        script_code:
+          type: "string"
+          description: "Coverage type code that categorizes the research focus"
+          enum:
+            - "COMPETITION_ANALYSIS"
+            - "TEAM_HISTORICAL_RESEARCH"
+            - "PLAYER_STATISTICAL_ANALYSIS"
+            - "MATCH_PREVIEW_COVERAGE"
+            - "TOURNAMENT_OVERVIEW"
+            - "LEAGUE_STANDINGS_ANALYSIS"
+            - "TRANSFER_MARKET_RESEARCH"
+            - "SEASONAL_REVIEW"
+            - "RECORD_BREAKING_ANALYSIS"
+            - "DERBY_HISTORICAL_ANALYSIS"
+        coverage_type:
+          type: "string"
+          description: "The type of coverage being planned"
+          enum:
+            - "MATCH_COVERAGE"
+            - "COMPETITION_ANALYSIS"
+            - "HISTORICAL_RESEARCH"
+            - "STATISTICAL_ANALYSIS"
+            - "TEAM_PROFILE"
+            - "PLAYER_PROFILE"
+            - "TOURNAMENT_COVERAGE"
+            - "GENERAL_TOPIC"
+        primary_focus:
+          type: "string"
+          description: "The main entity or topic being researched (e.g., 'UEFA Nations League', 'Cristiano Ronaldo', 'Manchester United vs Liverpool', 'Premier League 2023-24')"
+        search_queries:
+          type: "array"
+          items:
+            minItems: 2
+            maxItems: 3
+            type: "object"
+            description: "List of search queries with their types to gather comprehensive information about the topic, 5-8 queries to cover different aspects"
+            properties:
+              query:
+                type: "string"
+                description: |
+                  The actual search query to be executed. Should be specific and targeted to the research topic. Examples:
+                  - For competitions: 'UEFA Nations League top scorers all time statistics'
+                  - For historical data: 'Champions League most goals single season records'
+                  - For team analysis: 'Manchester United Premier League titles history 1990s'
+                  - For player stats: 'Cristiano Ronaldo international goals Portugal records'
+              type:
+                type: "string"
+                enum:
+                  - "COMPETITION_STATISTICS"
+                  - "HISTORICAL_RECORDS"
+                  - "TEAM_RECENT_FORM"
+                  - "TEAM_INJURY_NEWS"
+                  - "TEAM_MANAGER_QUOTES"
+                  - "HEAD_TO_HEAD_HISTORY"
+                  - "TEAM_KEY_PLAYERS"
+                  - "TEAM_COMPETITION_HISTORY"
+                  - "TEAM_LEGENDARY_PLAYERS"
+                  - "PLAYER_COMPETITION_STATS"
+                  - "PLAYER_CAREER_HIGHLIGHTS"
+                  - "TEAM_GOLDEN_ERA"
+                  - "TEAM_HISTORIC_ACHIEVEMENTS"
+                  - "TOURNAMENT_FORMAT_RULES"
+                  - "CURRENT_STANDINGS"
+                  - "TOP_PERFORMERS"
+                  - "RECORD_BREAKERS"
+                description: "The type of search being performed"

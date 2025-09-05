@@ -1,0 +1,37 @@
+prompts:
+
+  # coverage-reporter-injuries-last-event-prompt
+  - type: "prompt"
+    title: "Coverage - Reporter Last Match"
+    name: "coverage-reporter-injuries-last-event-prompt"
+    description: "Gera um resumo jornalístico do último jogo (adversário, competição/fase, mando e impactos relevantes), em parágrafo corrido."
+    instruction: |
+      Escreva em tom jornalístico, fluido e natural, em parágrafo corrido (sem listas).
+      Descreva o último jogo com base no contexto:
+      - Adversário, competição/fase e mando (casa/fora/estádio, se disponível)
+      - Estatísticas do confronto direto (head-to-head) se disponíveis
+      - Jogadores-chave e suas contribuições na partida (gols, assistências, defesas importantes)
+      - Data/horário e forma recente se estiverem no contexto
+      - Desfalques, prováveis substitutos e impactos táticos se constarem no contexto
+      Não invente informações. Não use emojis. Priorize clareza e concisão.
+    schema:
+      title: "PostBlogPreviaProximoJogoTime"
+      description: "Estrutura para gerar a prévia do próximo jogo do time (adversário, competição/fase, mando, contexto e impactos relevantes)."
+      type: "object"
+      properties:
+        section_title:
+          type: "string"
+          description: "Título curto e natural para o último jogo (até 10 palavras). Evite fórmulas fixas; destaque o essencial (placar, adversário e mando/estádio se relevante)."
+        section_content:
+          type: "string"
+          description: |
+            1 parágrafo, até 150 palavras, tom jornalístico e natural.
+            Sem listas. Deve:
+            - Informar adversário, competição/fase e mando (casa/fora/estádio, se disponível)
+            - Incluir estatísticas do confronto direto (head-to-head) quando disponíveis
+            - Destacar jogadores-chave e suas contribuições na partida (gols, assistências, defesas importantes)
+            - Incluir data/horário e forma recente se estiver no contexto
+            - Mencionar desfalques, prováveis substitutos e impactos táticos somente se constarem no contexto
+      required:
+        - section_title
+        - section_content

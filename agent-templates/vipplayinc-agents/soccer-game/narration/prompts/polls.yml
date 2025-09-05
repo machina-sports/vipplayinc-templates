@@ -1,0 +1,158 @@
+prompts:
+
+  # prompt-coverage-polls-live
+  - type: prompt
+    name: prompt-coverage-polls-live
+    title: "Coverage - TV Polls"
+    description: "Generates engaging opinion polls for TV before, during and after matches with prediction questions, live analysis and post-game evaluation."
+    schema:
+      title: "PollLiveContent"
+      description: |
+        TV POLL RULES:
+
+        OBJECTIVE:
+        - PRE-JOGO: Build anticipation before the match
+        - LIVE: Predictions and fan opinions during the game
+        - POST-GAME: Gather opinions on performance and key moments
+        - Ongoing viewer engagement
+        - Generate discussion and interaction
+
+        SIMPLE GUIDELINES:
+        - Questions focused on predictions (pre/during) or opinions (post)
+        - Simple language for casual viewers
+        - Dynamic content based on the moment
+        - Fan-friendly content
+
+        CONTENT FOCUS:
+        - PRE/DURING: Predictions ("Who will win?", "First goal scorer?")
+        - DURING: Live analysis ("Best player so far?", "More corners?")
+        - POST-GAME: Evaluations ("Man of the match?", "Best goal?", "Team rating?")
+        - ALWAYS: Comparisons and fan opinions
+
+        STRUCTURE:
+        - SHORT questions (Max 50 characters, e.g., "Who wins?", "First goal?")
+        - 2-4 brief options (Max 25 characters each)
+        - Focus on predictions and comparisons
+      type: "object"
+      required: ["questions"]
+      properties:
+        questions:
+          type: "array"
+          minItems: 10
+          maxItems: 10
+          description: "Array of ULTRA-SHORT poll questions (max 50 characters) for pre-game, live or post-game with brief options (max 25 characters)."
+          items:
+            type: "object"
+            required: [
+              "title",
+              "answers",
+              "difficulty",
+              "text_to_search"
+            ]
+            properties:
+              title:
+                type: "string"
+                description: "ULTRA-SHORT question (max 50 characters) - prediction, live analysis or post-game evaluation for display on TV/app."
+              difficulty:
+                type: "string"
+                description: "Difficulty level: only EASY questions for broad appeal"
+                enum: ["EASY", "MEDIUM", "HARD"]
+              text_to_search:
+                type: "string"
+                description: |
+                  A comma-separated list of relevant terms for image search. ALWAYS prefix with "Soccer" to avoid unrelated results. MUST include:
+                  - "Soccer" followed by the team name (e.g., "Soccer AC Milan" not just "Milan")
+                  - "Soccer" followed by the full name of any person mentioned
+                  - Any specific location or event mentioned with "Soccer" context
+                  - "Soccer prediction" or "Soccer match preview" for live content
+              answers:
+                type: "array"
+                description: "2-4 ULTRA-SHORT options (max 25 characters each) - predictions, analyses or evaluations for display on TV/app."
+                minItems: 2
+                maxItems: 4
+                items:
+                  type: "object"
+                  description: "Brief option (max 25 characters) - prediction, analysis or evaluation."
+                  required: [
+                    "title",
+                  ]
+                  properties:
+                    title:
+                      type: "string"
+                      description: "ULTRA-SHORT option (max 25 characters) - prediction, analysis or evaluation."
+              momento:
+                type: "string"
+                description: |
+                  Specific moment in the format MM:SS (minutes:seconds).
+                  
+                  MANDATORY CONVERSION FOR SEGUNDO_TEMPO:
+                  - If periodo = SEGUNDO_TEMPO: use RELATIVE time (subtract 45 min)
+                  - Examples: 
+                    * 50 absolute minutes = "05:00" (5 min of the second half)
+                    * 70 absolute minutes = "25:00" (25 min of the second half)
+                    * 89 absolute minutes = "44:00" (44 min of the second half)
+                    * 93 absolute minutes = "48:00" (48 min of the second half - stoppage time)
+                  
+                  For other periods:
+                  - PRIMEIRO_TEMPO: use absolute time (0-45 min)
+                  - PRE_JOGO: "00:00"
+                  - POS_JOGO: "90:00"
+                  - Stoppage time: use continuous time (e.g., "48:00" for 93 absolute minutes)
+              periodo:
+                type: "string"
+                description: |
+                  Code of the match phase:
+                  PRE_JOGO: Before kickoff
+                  PRIMEIRO_TEMPO: First 45 minutes + stoppage time
+                  INTERVALO: Halftime
+                  SEGUNDO_TEMPO: Second 45 minutes + stoppage time
+                  AGUARDANDO_PRORROGACAO: Waiting for extra time
+                  PRIMEIRO_TEMPO_PRORROGACAO: First half of extra time
+                  INTERVALO_PRORROGACAO: Extra time interval
+                  SEGUNDO_TEMPO_PRORROGACAO: Second half of extra time
+                  AGUARDANDO_PENALIDADES: Waiting for penalties
+                  PENALIDADES: Penalty shootout
+                  FIM_DE_JOGO: Final moment
+                  POS_JOGO_AO_VIVO: Statistical analyses during live game
+                  POS_JOGO: Post-match events (when Status: closed)
+                enum:
+                  - PRE_JOGO
+                  - PRIMEIRO_TEMPO
+                  - INTERVALO
+                  - SEGUNDO_TEMPO
+                  - AGUARDANDO_PRORROGACAO
+                  - PRIMEIRO_TEMPO_PRORROGACAO
+                  - INTERVALO_PRORROGACAO
+                  - SEGUNDO_TEMPO_PRORROGACAO
+                  - AGUARDANDO_PENALIDADES
+                  - PENALIDADES
+                  - FIM_DE_JOGO
+                  - POS_JOGO_AO_VIVO
+                  - POS_JOGO
+              play_type:
+                type: "string"
+                description: |
+                  Type of play or event:
+                  - NORMAL: Common match event
+                  - IMPORTANTE: Significant event that impacts the game
+                  - RESUMO_AUTOMATICO: Automatic summary of statistics
+                  - CARTAO_AMARELO: Yellow card
+                  - CARTAO_VERMELHO: Red card or sending off
+                  - SUBSTITUICAO: Substitution (players in/out)
+                  - GOL: Goal scored
+                  - GOL_CONTRA: Own goal
+                  - PENALTI: Penalty awarded, taken, or saved
+                  - POS_JOGO_OJOGO: Post-game analysis about the match
+                  - POS_JOGO_DESTAQUE: Post-game analysis of individual performances
+                enum:
+                  - NORMAL
+                  - IMPORTANTE
+                  - RESUMO_AUTOMATICO
+                  - CARTAO_AMARELO
+                  - CARTAO_VERMELHO
+                  - SUBSTITUICAO
+                  - GOL
+                  - GOL_CONTRA
+                  - PENALTI
+                  - POS_JOGO_OJOGO
+                  - POS_JOGO_DESTAQUE

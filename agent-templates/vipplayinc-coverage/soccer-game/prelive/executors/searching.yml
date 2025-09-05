@@ -1,0 +1,141 @@
+workflow:
+
+  name: coverage-event-prelive-executor-searching
+  title: "Coverage - Prelive Introduction Executor Searching"
+  description: "Workflow to execute Prelive Introduction content searching."
+  context-variables:
+    debugger:
+      enabled: true
+    google-genai:
+      api_key: "$TEMP_CONTEXT_VARIABLE_GOOGLE_GENERATIVE_AI_API_KEY"
+    machina-ai:
+      api_key: "$TEMP_CONTEXT_VARIABLE_SDK_OPENAI_API_KEY"
+  outputs:
+    workflow-status: "$.get('workflow-status', 'skipped')"
+  tasks:
+
+    # docs: load-next-agenda
+    - type: document
+      name: load-next-agenda
+      connector:
+        name: machina-ai
+        command: "invoke_embedding"
+        model: "text-embedding-3-small"
+      config:
+        action: "search"
+        search-limit: 1
+        search-vector: false
+        search-sorters: ["value.agenda-control.updated", 1]
+      filters:
+        metadata.content-group: "{'$in': ['SPORTS_SOCCER_PRELIVE']}"
+        value.agenda-control.finished: "{'$ne': True}"
+        value.agenda-control.moderated: "{'$ne': True}"
+        value.agenda-control.processing: "{'$ne': True}"
+        value.agenda-control.searching: "{'$ne': True}"
+      inputs:
+        name: "'content-agenda'"
+      outputs:
+        agenda-exists: "len($.get('documents', [])) > 0 if $.get('documents') else False"
+        agenda-document: "$.get('documents', [{}])[0] if $.get('documents') else None"
+        agenda-document-id: "$.get('documents', [{}])[0].get('_id', '') if $.get('documents') else ''"
+        agenda-metadata: "$.get('documents', [{}])[0].get('metadata', {}) if $.get('documents') else None"
+        agenda-value: "$.get('documents', [{}])[0].get('value', {}) if $.get('documents') else None"
+
+    # docs: agenda-version-control
+    - type: document
+      name: agenda-version-control-processing
+      condition: "$.get('agenda-exists') is True"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      filters:
+        document_id: "$.get('agenda-document-id')"
+      documents:
+        content-agenda: |
+          {
+            **$.get('agenda-value', {}),
+            'agenda-control': {
+              **$.get('agenda-control', {}),
+              'processing': True,
+              'updated': datetime.utcnow()
+            }
+          }
+
+    # map: coverage-mapping-agenda-control
+    - type: mapping
+      name: coverage-mapping-agenda-control
+      condition: "$.get('agenda-exists') is True"
+      inputs:
+        _document: "$.get('agenda-value')"
+        _metadata: "$.get('agenda-metadata')"
+      outputs:
+        agenda-counter: "$.get('agenda-counter')"
+        agenda-control: "$.get('agenda-control')"
+        agenda-control-finished: "$.get('agenda-control', {}).get('finished', False)"
+        content-group: "$.get('content-group')"
+        content-name: "$.get('content-name')"
+        content-topic: "$.get('content-topic')"
+        event_code: "$.get('event_code')"
+        instructions: "$.get('script-instructions')"
+
+    # map: coverage-event-prelive-executor-searching-map
+    - type: mapping
+      name: coverage-event-prelive-executor-searching-map
+      condition: "$.get('agenda-exists') is True"
+      inputs:
+        _document: "$.get('agenda-value')"
+        _metadata: "$.get('agenda-metadata')"
+      outputs:
+        version-control: "$.get('version-control')"
+        version-control-status: "$.get('version-control-status')"
+        web-search-queries: "$.get('web-search-queries', [])"
+        web-search-queries-length: "len($.get('web-search-queries', []))"
+
+    # docs: create-search-request
+    - type: document
+      name: create-search-request
+      condition: |
+        (
+          $.(agenda-exists) is True
+          and '$.(version-control-status)' == 'pending'
+          and $.(web-search-queries-length) > 0
+        )
+      config:
+        action: "bulk-save"
+        embed-vector: false
+        force-update: true
+      document_name: "'web-search'"
+      documents:
+        items: "$.get('parsed-items', [])"
+      inputs:
+        parsed-items: "$.get('web-search-queries')"
+      outputs:
+        workflow-status: "'executed'"
+
+    # VERSION CONTROL
+
+    # docs: agenda-version-control
+    - type: document
+      name: agenda-version-control-update
+      condition: "$.get('agenda-exists') is True"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      filters:
+        document_id: "$.get('agenda-document-id')"
+      documents:
+        content-agenda: |
+          {
+            **$.get('agenda-value', {}),
+            'agenda-control': {
+              **$.get('agenda-control', {}),
+              'counter': $.get('agenda-counter', 0) + 1,
+              'finished': False,
+              'moderated': False,
+              'processing': False,
+              'searching': True,
+              'updated': datetime.utcnow()
+            }
+          }

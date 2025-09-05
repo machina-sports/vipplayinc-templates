@@ -1,0 +1,33 @@
+prompts:
+
+  # coverage-event-prelive-web-search-analysis
+  - type: prompt
+    name: coverage-event-prelive-web-search-analysis
+    title: "Coverage - Prelive Introduction Web Search Analysis"
+    description: "Analyze scraped webpage content to extract compelling story insights and contextual information. Transform raw web content into structured summaries that highlight key persons, statistics, facts, and narrative elements that create engaging storytelling opportunities for sports coverage."
+    schema:
+      title: "WebContentAnalysisForSemanticLayer"
+      description: "Process scraped webpage content to generate insightful summaries that serve as context for a semantic layer. Extract and structure the most compelling elements including key personalities, significant numbers, notable facts, and story-worthy details. Focus on identifying narrative hooks, statistical highlights, human interest angles, and factual foundations that can enhance sports coverage storytelling."
+      type: "object"
+      properties:
+        snippets:
+          type: "array"
+          description: "Contextual insights extracted from scraped webpage content, structured as story-ready summaries. Each snippet captures a compelling narrative element with supporting facts, key personalities, and statistical context that can enhance sports coverage storytelling."
+          minItems: 1
+          maxItems: 10
+          items:
+            type: "object"
+            required:
+              - title
+              - content
+              - subject
+            properties:
+              content:
+                type: "string"
+                description: "Rich narrative summary containing key story elements extracted from the webpage: prominent persons (players, coaches, officials), significant numbers (scores, statistics, records, dates, ages, transfer values), compelling facts (achievements, milestones, records broken), and human interest details (backgrounds, rivalries, comebacks, controversies). Structure as a coherent story segment that provides context and depth. Include specific names, exact figures, and concrete details that make the story authentic and engaging. Example: 'Kylian Mbappé became the youngest player since Pelé to score in a World Cup final when he netted against Croatia on July 15, 2018, at the Luzhniki Stadium in Moscow. At just 19 years and 207 days old, the PSG forward's goal helped secure France's 4-2 victory and their second World Cup title, with Mbappé finishing as the tournament's Best Young Player after scoring 4 goals in 7 matches.'"
+              title:
+                type: "string"
+                description: "Compelling headline that captures the essence of the story insight, emphasizing the most newsworthy or interesting element. Should highlight key personalities, significant achievements, or notable statistics. Focus on what makes this information valuable for storytelling. Example: 'Mbappé's Historic World Cup Final Goal at 19' or 'France's Second World Cup Victory Through Rising Star'"
+              subject:
+                type: "string"
+                description: "Primary subject classification identifying the main entities and themes. Include full names of key persons, specific teams/organizations, competitions, and the central narrative theme. This helps categorize content for semantic layer organization. Example: 'Kylian Mbappé - France National Team - 2018 FIFA World Cup - youngest goalscorer milestone'"

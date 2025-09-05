@@ -1,0 +1,18 @@
+agent:
+
+  name: coverage-live-consumer
+  title: "Coverage - Live"
+  description: "Workflow to consume researcher live."
+  context:
+    config-frequency: 0.5
+  inputs:
+    event_code: "$.get('event_code') or None"
+  workflows:
+
+    # Workflow Event Update Live
+    - name: sportradar-soccer-update-live
+      description: "Soccer Event Update Live"
+      outputs:
+        event_code: "$.get('event_code')"
+        soccer-event-update: "$.get('workflow-status', False)"
+        

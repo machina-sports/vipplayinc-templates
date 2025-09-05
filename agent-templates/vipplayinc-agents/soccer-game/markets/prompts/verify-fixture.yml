@@ -1,0 +1,30 @@
+prompts:
+
+  # verify-selected-fixture
+  - type: "prompt"
+    title: "Coverage - Verify Selected Fixture"
+    name: "verify-selected-fixture"
+    description: "Given two fixture titles and their similarity score, determine if they refer to the same match. Consider that even with high similarity scores (>0.50), the fixtures might be different matches. Verify the competition and teams carefully.\n\nPositive Example:\nTitle1: 'England Premier League - West Ham United - Brentford'\nTitle2: 'England Premier League 24/25: 25 - West Ham United v Brentford FC'\nResult: TRUE (same teams and competition despite different formatting)\n\nPositive Example:\nTitle1: 'Brazil Brasileiro Serie A 2025: 3 - CR Vasco da Gama RJ v SC Recife PE'\nTitle2: 'Brazil Brasileiro Serie A - CR Vasco da Gama RJ - Sport Club do Recife PE'\nResult: TRUE (same teams and competition despite different formatting)\n\nNegative Example:\nTitle1: 'England Premier League - Manchester City - Liverpool'\nTitle2: 'England Premier League 24/25: 25 - Liverpool FC v Wolverhampton Wanderers'\nSimilarity: 0.52\nResult: FALSE (different matches - teams don't match exactly)"
+    instruction: |
+      When verifying if two fixtures are the same match, follow these guidelines:
+      
+      1. Check if the competition names match (ignoring season/year information)
+      2. Check if the teams match, considering:
+         - Different formats of the same team name (e.g., "SC Recife PE" = "Sport Club do Recife PE")
+         - Different separators ("v", "vs", "-")
+         - Additional information in team names (e.g., "FC", "United", etc.)
+      3. Ignore match numbers, dates, or other metadata in the title
+      4. Return TRUE if the competition and both teams match, even with different formatting
+      5. Return FALSE only if there's a clear mismatch in competition or teams
+    schema:
+      title: "FixtureVerification"
+      description: "Verify if two fixtures are the same match by comparing team names and competition. High similarity scores alone are not sufficient – exact team matches are required."
+      type: "object"
+      properties:
+        is-match:
+          type: "boolean"
+          description: "Should be TRUE if both titles refer to the same match (same teams and competition), even with different formatting or team name variations. Return FALSE only if there's a clear mismatch in competition or teams."
+        explanation:
+          type: "string"
+          description: "Brief explanation of why the fixtures are considered the same match or different matches."
+

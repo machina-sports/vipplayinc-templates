@@ -1,0 +1,227 @@
+prompts:
+
+  # prompt-coverage-polls-in-advance-executor
+  - type: prompt
+    name: prompt-coverage-polls-in-advance-executor
+    title: "Coverage - Polls In Advance Executor"
+    description: "Generates engaging pre-match opinion polls for TV with prediction and fan engagement questions."
+    schema:
+      title: "PollInAdvanceContentEnglish"
+      description: |
+        PRE-MATCH TV POLL RULES:
+
+        OBJECTIVE:
+        - Build anticipation before the match
+        - Fan predictions and opinions
+        - Pre-match engagement
+        - Generate excitement for upcoming game
+
+        EASY GUIDELINES:
+        - Prediction-focused questions
+        - Simple language for casual viewers
+        - Pre-match speculation
+        - Fan-friendly content
+
+        CONTENT FOCUS:
+        - Match outcome predictions ("Who will win?")
+        - Performance predictions ("Who'll score first?", "More corners?")
+        - Player comparisons ("Best player on pitch?")
+        - Fun predictions ("Most cards?", "Goals in first half?")
+
+        STRUCTURE:
+        - SHORT questions (Max 50 chars, Ex: "Who'll win today?", "First goal scorer?")
+        - 2-4 brief options (Max 25 chars each)
+        - Focus on predictions and comparisons
+      type: "object"
+      required: ["questions"]
+      properties:
+        questions:
+          type: "array"
+          minItems: 10
+          maxItems: 10
+          description: "Array of ULTRA-SHORT pre-match poll questions (max 50 chars) with brief prediction options (max 25 chars)."
+          items:
+            type: "object"
+            required: [
+              "title",
+              "title_es",
+              "title_it",
+              "title_de",
+              "title_fr",
+              "title_pt",
+              "title_ja",
+              "title_he",
+              "title_ar",
+              "answers",
+              "difficulty",
+              "text_to_search"
+            ]
+            properties:
+              title:
+                type: "string"
+                description: "ULTRA-SHORT pre-match prediction question (max 50 chars) for TV/app display."
+              difficulty:
+                type: "string"
+                description: "Difficulty level: EASY questions only for broad appeal"
+                enum: ["EASY", "MEDIUM", "HARD"]
+              text_to_search:
+                type: "string"
+                description: |
+                  A comma-separated list of relevant terms for image search. ALWAYS prefix with "Soccer" to avoid unrelated results. MUST include:
+                  - "Soccer" followed by Team name (e.g., "Soccer AC Milan" not just "Milan")
+                  - "Soccer" followed by any mentioned person's full name
+                  - Any specific venue or event mentioned with "Soccer" context
+                  - "Soccer prediction" or "Soccer match preview" for pre-match content
+              title_es:
+                type: "string"
+                description: "SHORT and ENGAGING pre-match question in Spanish."
+              title_it:
+                type: "string"
+                description: "SHORT and ENGAGING pre-match question in Italian."
+              title_de:
+                type: "string"
+                description: "SHORT and ENGAGING pre-match question in German."
+              title_fr:
+                type: "string"
+                description: "SHORT and ENGAGING pre-match question in French."
+              title_pt:
+                type: "string"
+                description: "SHORT and ENGAGING pre-match question in Brazilian Portuguese."
+              title_ja:
+                type: "string"
+                description: "SHORT and ENGAGING pre-match question in Japanese."
+              title_he:
+                type: "string"
+                description: "SHORT and ENGAGING pre-match question in Hebrew."
+              title_ar:
+                type: "string"
+                description: "SHORT and ENGAGING pre-match question in Arabic."
+              answers:
+                type: "array"
+                description: "2-4 ULTRA-SHORT prediction options (max 25 chars each) for TV/app display."
+                minItems: 2
+                maxItems: 4
+                items:
+                  type: "object"
+                  description: "Brief prediction option (max 25 chars)."
+                  required: [
+                    "title",
+                    "title_es",
+                    "title_it",
+                    "title_de",
+                    "title_fr",
+                    "title_pt",
+                    "title_ja",
+                    "title_he",
+                    "title_ar"
+                  ]
+                  properties:
+                    title:
+                      type: "string"
+                      description: "ULTRA-SHORT prediction option (max 25 chars)."
+                    title_es:
+                      type: "string"
+                      description: "SHORT prediction option in Spanish."
+                    title_it:
+                      type: "string"
+                      description: "SHORT prediction option in Italian."
+                    title_de:
+                      type: "string"
+                      description: "SHORT prediction option in German."
+                    title_fr:
+                      type: "string"
+                      description: "SHORT prediction option in French."
+                    title_pt:
+                      type: "string"
+                      description: "SHORT prediction option in Brazilian Portuguese."
+                    title_ja:
+                      type: "string"
+                      description: "SHORT prediction option in Japanese."
+                    title_he:
+                      type: "string"
+                      description: "SHORT prediction option in Hebrew."
+                    title_ar:
+                      type: "string"
+                      description: "SHORT prediction option in Arabic."
+
+  # prompt-coverage-polls-in-advance-generator
+  - type: prompt
+    name: prompt-coverage-polls-in-advance-generator
+    title: "Coverage - Polls In Advance Generator"
+    description: "Generate editorial briefing script for planning pre-match poll coverage focusing on predictions and fan engagement"
+    schema:
+      title: "PromptMatchCoverageInAdvancePollsGenerator"
+      description: "Generate editorial briefing script for planning pre-match poll coverage discussing both teams equally"
+      required: [
+        "title",
+        "content",
+        "subject",
+        "script_code",
+        "both_teams",
+        "polls_topics"
+      ]
+      type: "object"
+      properties:
+        content:
+          type: "string"
+          description: "Brief editorial outline highlighting key prediction focus points and pre-match engagement angles for both teams"
+        title:
+          type: "string"
+          description: "Engaging title highlighting the upcoming matchup predictions covering both teams equally"
+        subject:
+          type: "string"
+          description: "Main focus of the pre-match coverage (e.g., 'Arsenal vs Liverpool predictions', 'Real Madrid vs Barcelona Champions League preview polls')"
+        script_code:
+          type: "string"
+          description: "Match coverage type code in format TEAMA_X_TEAMB_POLLS_ADVANCE"
+        both_teams:
+          type: "string"
+          description: "The matchup between both teams, presented neutrally (e.g., 'Arsenal vs Liverpool', 'Real Madrid vs Barcelona')"
+        polls_topics:
+          type: "array"
+          minItems: 1
+          maxItems: 2
+          items:
+            type: "object"
+            description: "List of pre-match polls topics covering predictions, outcomes, and fan engagement for both teams"
+            required: [
+              "query",
+              "type"
+            ]
+            properties:
+              query:
+                type: "string"
+                description: |
+                  The actual pre-match poll topic to be generated. Focus on predictions and fan engagement covering both teams. Examples:
+                  - 'Who will win: AC Milan vs Inter?'
+                  - 'First goal scorer prediction'
+                  - 'Total goals: Over or Under 2.5?'
+                  - 'Which team gets more corners?'
+                  - 'Most yellow cards shown?'
+                  - 'Best player on the pitch?'
+                  - 'Which team will dominate possession?'
+                  - 'Penalty decision correct?'
+                  - 'Rate this goal quality'
+                  - 'Comeback possible?'
+                  - 'Offside or onside?'
+              type:
+                type: "string"
+                enum:
+                  - "MATCH_OUTCOME_PREDICTION"
+                  - "FIRST_GOAL_SCORER"
+                  - "TOTAL_GOALS_PREDICTION"
+                  - "CORNER_KICK_PREDICTION"
+                  - "CARD_PREDICTION"
+                  - "BEST_PLAYER_PREDICTION"
+                  - "HALFTIME_SCORE_PREDICTION"
+                  - "TEAM_PERFORMANCE_COMPARISON"
+                  - "FAN_EXCITEMENT_METER"
+                  - "PRE_MATCH_CONFIDENCE"
+                  - "PENALTY_DECISION_POLL"
+                  - "GOAL_QUALITY_RATING"
+                  - "COMEBACK_PREDICTION"
+                  - "OFFSIDE_DECISION_POLL"
+                  - "RED_CARD_DECISION_POLL"
+                  - "REFEREE_PERFORMANCE_POLL"
+                  - "LIVE_EVENT_REACTION"
+                description: "The type of prediction poll to be generated for pre-match engagement" 

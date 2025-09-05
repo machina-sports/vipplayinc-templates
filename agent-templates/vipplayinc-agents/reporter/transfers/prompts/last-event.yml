@@ -1,0 +1,32 @@
+prompts:
+
+  # coverage-reporter-transfers-last-event-prompt
+  - type: "prompt"
+    title: "Coverage - Reporter Last Match"
+    name: "coverage-reporter-transfers-last-event-prompt"
+    description: "Gera um resumo jornalístico do último jogo (adversário, competição/fase, mando e impactos relevantes), em parágrafo corrido."
+    instruction: |
+      Escreva em tom jornalístico, fluido e natural, em parágrafo corrido (sem listas).
+      Descreva o último jogo com base APENAS no contexto: adversário, competição/fase e mando (casa/fora/estádio, se disponível).
+      Inclua data/horário e forma recente/head-to-head somente se estiverem no contexto.
+      Cite desfalques, prováveis substitutos e impactos táticos apenas se constarem no contexto.
+      Não invente informações. Não use emojis. Priorize clareza e concisão.
+    schema:
+      title: "PostBlogPreviaProximoJogoTime"
+      description: "Estrutura para gerar a prévia do próximo jogo do time (adversário, competição/fase, mando, contexto e impactos relevantes)."
+      type: "object"
+      properties:
+        section_title:
+          type: "string"
+          description: "Título curto e natural para o último jogo (até 10 palavras). Evite fórmulas fixas; destaque o essencial (placar, adversário e mando/estádio se relevante)."
+        section_content:
+          type: "string"
+          description: |
+            1 parágrafo, até 100 palavras, tom jornalístico e natural.
+            Sem listas. Deve:
+            - Informar adversário, competição/fase e mando (casa/fora/estádio, se disponível)
+            - Incluir data/horário e forma recente/head-to-head apenas se estiver no contexto
+            - Mencionar desfalques, prováveis substitutos e impactos táticos somente se constarem no contexto
+      required:
+        - section_title
+        - section_content

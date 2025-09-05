@@ -1,0 +1,184 @@
+prompts:
+  # prompt-coverage-runofshow-graphics
+  - type: prompt
+    name: prompt-coverage-runofshow-graphics
+    title: "Coverage - Run of Show Graphics"
+    description: "Generates dynamic and informative GCs (Graphics Character Generator) content for live broadcast."
+    instruction: |
+        OBJETIVO: Criar sugestões de GCs (geradores de caracteres) dinâmicos e informativos para diferentes momentos da transmissão ao vivo.
+
+        DIRETRIZES:
+        - Desenvolver GCs específicos para cada momento do jogo (pré, durante, pós)
+        - Criar conteúdo informativo e engajador
+        - Incluir estatísticas relevantes e curiosidades
+        - Manter linguagem adequada à transmissão
+        - Aproveitar dados históricos e em tempo real
+        - Integrar conteúdo das redes sociais
+
+        BRIEFING DE BUSCA DE IMAGENS/TEXTO:
+        - Fornecer termos relevantes separados por vírgula para busca de imagens
+        - SEMPRE prefixar com "Soccer" para evitar resultados não relacionados
+        - Incluir nomes dos times, nomes completos dos jogadores, estádio, liga, país ou nomes de cidades quando relevante
+
+    schema:
+      title: "BroadcastGraphicsPlan"
+      description: |
+        REGRAS DOS GCs:
+
+        OBJETIVO:
+        - Informação clara e direta
+        - Timing adequado ao momento
+        - Dados relevantes e precisos
+        - Engajamento do público
+        - Narrativa fluida
+
+        DIRETRIZES:
+        - GCs específicos por momento
+        - Estatísticas contextualizadas
+        - Curiosidades relevantes
+        - Integração com redes sociais
+        - Chamadas para próximos eventos
+
+        ESTRUTURA:
+        - GCs de pré-jogo
+        - GCs durante o jogo
+        - GCs de pós-jogo
+      type: "object"
+      required: ["campaign_name", "pre_match_graphics", "live_match_graphics", "post_match_graphics"]
+      properties:
+        campaign_name:
+          type: "string"
+          description: "Nome do pacote de GCs (max 50 caracteres)"
+
+        pre_match_graphics:
+          type: "array"
+          description: "GCs para o pré-jogo"
+          minItems: 5
+          maxItems: 15
+          items:
+            type: "object"
+            required: [
+              "gc_title",
+              "content_type",
+              "display_timing",
+              "duration",
+              "data_source",
+              "text_to_search"
+            ]
+            properties:
+              gc_title:
+                type: "string"
+                description: "Título do GC (max 50 caracteres)"
+              content_type:
+                type: "string"
+                enum: [
+                  "Contagem Regressiva",
+                  "Escalação",
+                  "Estatística Individual",
+                  "Curiosidade Histórica",
+                  "Prévia Tática",
+                  "Retrospecto"
+                ]
+              display_timing:
+                type: "string"
+                description: "Momento ideal para exibição no pré-jogo (max 100 caracteres)"
+              duration:
+                type: "string"
+                description: "Tempo recomendado de exibição (em segundos)"
+              data_source:
+                type: "string"
+                description: "Fonte dos dados para o GC (max 100 caracteres)"
+              text_to_search:
+                type: "string"
+                description: |
+                  Lista de termos relevantes para busca de imagens, separados por vírgula. SEMPRE prefixar com "Soccer" para evitar resultados não relacionados.
+
+        live_match_graphics:
+          type: "array"
+          description: "GCs para durante o jogo"
+          minItems: 8
+          maxItems: 20
+          items:
+            type: "object"
+            required: [
+              "gc_title",
+              "content_type",
+              "trigger_moment",
+              "duration",
+              "data_requirements",
+              "text_to_search"
+            ]
+            properties:
+              gc_title:
+                type: "string"
+                description: "Título do GC (max 50 caracteres)"
+              content_type:
+                type: "string"
+                enum: [
+                  "Estatística em Tempo Real",
+                  "Fato Histórico",
+                  "Comentário Social",
+                  "Análise Tática",
+                  "Highlight Individual",
+                  "Placar Dinâmico"
+                ]
+              trigger_moment:
+                type: "string"
+                description: "Momento ou evento que deve acionar o GC (max 100 caracteres)"
+              duration:
+                type: "string"
+                description: "Tempo recomendado de exibição (em segundos)"
+              data_requirements:
+                type: "array"
+                description: "Dados necessários para gerar o GC"
+                minItems: 1
+                maxItems: 5
+                items:
+                  type: "string"
+              text_to_search:
+                type: "string"
+                description: |
+                  Lista de termos relevantes para busca de imagens, separados por vírgula. SEMPRE prefixar com "Soccer" para evitar resultados não relacionados.
+
+        post_match_graphics:
+          type: "array"
+          description: "GCs para o pós-jogo"
+          minItems: 5
+          maxItems: 15
+          items:
+            type: "object"
+            required: [
+              "gc_title",
+              "content_type",
+              "display_order",
+              "duration",
+              "data_source",
+              "text_to_search"
+            ]
+            properties:
+              gc_title:
+                type: "string"
+                description: "Título do GC (max 50 caracteres)"
+              content_type:
+                type: "string"
+                enum: [
+                  "Herói do Jogo",
+                  "Estatísticas Finais",
+                  "Análise Tática",
+                  "Próximo Jogo",
+                  "Melhores Momentos",
+                  "Repercussão Social"
+                ]
+              display_order:
+                type: "integer"
+                description: "Ordem de exibição no pós-jogo (1 sendo o primeiro)"
+              duration:
+                type: "string"
+                description: "Tempo recomendado de exibição (em segundos)"
+              data_source:
+                type: "string"
+                description: "Fonte dos dados para o GC (max 100 caracteres)"
+              text_to_search:
+                type: "string"
+                description: |
+                  Lista de termos relevantes para busca de imagens, separados por vírgula. SEMPRE prefixar com "Soccer" para evitar resultados não relacionados.

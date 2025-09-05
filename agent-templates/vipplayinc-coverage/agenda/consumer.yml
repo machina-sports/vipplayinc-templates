@@ -1,0 +1,30 @@
+agent:
+
+  name: coverage-researcher-consumer
+  title: "Coverage - Researcher"
+  description: "Workflow to consume researcher."
+  context:
+    config-frequency: 0.2
+  inputs:
+    event_code: "$.get('event_code') or None"
+  workflows:
+
+    # # coverage researcher service
+    # - name: "coverage-researcher-service"
+    #   description: "Coverage Researcher Service"
+    #   inputs:
+    #     event_code: $.get('event_code')
+    #   outputs:
+    #     researcher-service-status: "$.get('workflow-status', False)"
+
+    # coverage researcher generator
+    - name: "coverage-researcher-generator"
+      description: "Coverage Researcher Generator"
+      outputs:
+        researcher-generator-status: "$.get('workflow-status', False)"
+
+    # coverage researcher executor
+    - name: "coverage-researcher-executor"
+      description: "Coverage Researcher Executor"
+      outputs:
+        researcher-executor-status: "$.get('workflow-status', False)"

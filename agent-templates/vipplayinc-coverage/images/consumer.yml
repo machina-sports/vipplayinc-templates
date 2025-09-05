@@ -1,0 +1,30 @@
+agent:
+
+  name: coverage-images-consumer
+  title: "Coverage - Images"
+  description: "Workflow to consume images."
+  context:
+    config-frequency: 0.2
+  inputs:
+    event_code: "$.get('event_code') or None"
+  workflows:
+
+    # # coverage image service
+    # - name: coverage-images-service
+    #   description: "Coverage Images Service"
+    #   inputs:
+    #     event_code: $.get('event_code')
+    #   outputs:
+    #     images-service-status: "$.get('workflow-status', False)"
+
+    # coverage image generator
+    - name: coverage-images-generator
+      description: "Coverage Images Generator"
+      outputs:
+        images-generator-status: "$.get('workflow-status', False)"
+
+    # coverage image executor
+    - name: coverage-images-executor
+      description: "Coverage Images Executor"
+      outputs:
+        images-executor-status: "$.get('workflow-status', False)"

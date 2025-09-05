@@ -1,0 +1,269 @@
+workflow:
+
+  name: coverage-researcher-markets
+  title: "Coverage - Researcher Markets"
+  description: "Workflow to execute Soccer Game Markets."
+  context-variables:
+    bwin:
+      Bwin-AccessId: "$TEMP_CONTEXT_VARIABLE_BWIN_ACCESS_ID"
+      Bwin-AccessIdToken: "$TEMP_CONTEXT_VARIABLE_BWIN_ACCESS_ID_TOKEN"
+    debugger:
+      enabled: false
+    google-genai:
+      api_key: "$TEMP_CONTEXT_VARIABLE_GOOGLE_GENERATIVE_AI_API_KEY"
+    machina-ai:
+      api_key: "$TEMP_CONTEXT_VARIABLE_SDK_OPENAI_API_KEY"
+    sportradar-soccer:
+      sportradar_api_key: "$TEMP_CONTEXT_VARIABLE_SPORTRADAR_SOCCER_V4_API_KEY"
+  inputs:
+    content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+    topic: "$.get('topic', 'markets')"
+  outputs:
+    workflow-status: "$.get('workflow-status', 'skipped')"
+  tasks:
+
+    # docs: load-next-agenda
+    - type: document
+      name: load-next-agenda
+      connector:
+        name: machina-ai
+        command: "invoke_embedding"
+        model: "text-embedding-3-small"
+      config:
+        action: "search"
+        search-limit: 1
+        search-vector: false
+        search-sorters: ["value.agenda-control.updated", 1]
+      filters:
+        metadata.content-group: "$.get('content-group')"
+        value.agenda-control.finished: "{'$ne': True}"
+        value.agenda-control.markets: "{'$ne': True}"
+        value.agenda-control.processing: "{'$ne': True}"
+        value.agenda-object.topic: "$.get('topic')"
+      inputs:
+        name: "'content-agenda'"
+      outputs:
+        agenda-exists: "len($.get('documents', [])) > 0 if $.get('documents') else False"
+        agenda-document: "$.get('documents', [{}])[0] if $.get('documents') else None"
+        agenda-document-id: "$.get('documents', [{}])[0].get('_id', '') if $.get('documents') else ''"
+        agenda-metadata: "$.get('documents', [{}])[0].get('metadata', {}) if $.get('documents') else None"
+        agenda-value: "$.get('documents', [{}])[0].get('value', {}) if $.get('documents') else None"
+
+    # map: coverage-mapping-agenda-control
+    - type: mapping
+      name: coverage-mapping-agenda-control
+      condition: "$.get('agenda-exists') is True"
+      inputs:
+        _document: "$.get('agenda-value')"
+        _metadata: "$.get('agenda-metadata')"
+      outputs:
+        agenda-counter: "$.get('agenda-counter')"
+        agenda-control: "$.get('agenda-control')"
+        agenda-control-finished: "$.get('agenda-control', {}).get('finished', False)"
+        content-group: "$.get('content-group')"
+        content-name: "$.get('content-name')"
+        content-topic: "$.get('content-topic')"
+        event_code: "$.get('event_code')"
+        team_code: "$.get('team_code')"
+        instructions: "$.get('script-instructions')"
+        workflow-status: "'executed'"
+
+    # docs: agenda-version-control
+    - type: document
+      name: agenda-version-control-processing
+      condition: "$.get('agenda-exists') is True"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      filters:
+        document_id: "$.get('agenda-document-id')"
+      documents:
+        content-agenda: |
+          {
+            **$.get('agenda-value', {}),
+            'agenda-control': {
+              **$.get('agenda-control', {}),
+              'processing': True,
+              'updated': datetime.utcnow()
+            }
+          }
+
+    ## MARKETS
+
+    ## map bwin markets
+
+    # load-fixture-by-similarity
+    - type: document
+      name: "load-fixture-by-similarity"
+      description: "Load fixture (from sportingbet) by title similarity."
+      condition: "$.get('team_code') is not None"
+      config:
+        action: "search"
+        search-limit: 100
+        search-sorters: ["value.startDateUtc", 1]
+        search-vector: false
+      filters:
+        value.state: "'Not started'"
+      inputs:
+        name: "'game-market'"
+      outputs:
+        game-markets: "$.get('documents', [])"
+        game-markets-count: "len($.get('documents', []))"
+        game-markets-parsed: |
+          [
+            {
+              'market_code': m.get('metadata', {}).get('market_code', ''),
+              'market_type': m.get('metadata', {}).get('market_type', ''),
+              'title': m.get('value', {}).get('title', '')
+            }
+            for m in $.get('documents', [])
+          ]
+
+    # prompt-researcher-odds-select-event
+    - type: prompt
+      name: prompt-researcher-odds-select-event
+      condition: "$.get('team_code') is not None and $.get('game-markets-count') > 0"
+      connector:
+        name: "google-genai"
+        command: "invoke_prompt"
+        model: "gemini-2.5-pro"
+      inputs:
+        _1-game-markets-parsed: "$.get('game-markets-parsed')"
+        _2-instruction: f"Select the betting market equivalent to match {$.get('content-name')}"
+      outputs:
+        event_id: "$.get('code')"
+        event_title: "$.get('title')"
+        other_events: "$.get('other_events')"
+        has_found_event: "$.get('has_found_event')"
+
+    # load-market-by-fixture
+    - type: connector
+      name: "load-market-by-fixture-schedule"
+      description: "Get a market by fixture from Sportingbet"
+      condition: "$.get('team_code') is not None and $.get('has_found_event') is True"
+      connector:
+        name: "bwin"
+        command: "get-offer/api/{sportId}/{country}/fixtures"
+        command_attribute:
+          country: "'br'"
+          sportId: "'4'"
+      inputs:
+        fixtureIds: "$.get('event_id')" 
+        onlyMainMarkets: "True"
+      outputs:
+        markets: "$.get('items', [])[0].get('markets', [])"
+        bulk-markets: |
+          [
+            {
+              **m,
+              'title': f"{m.get('name', {}).get('shortText')} {m.get('marketType')} {m.get('value', '')}"
+            }
+            for m in $.get('items', [])[0].get('markets', [])
+            if m.get('marketType') == 'Over/Under' or m.get('marketType') == '3way'
+          ]
+
+    # research-match-odds
+    - type: prompt
+      name: prompt-coverage-researcher-odds-game
+      description: "Research match odds."
+      condition: "$.get('team_code') is not None and $.get('has_found_event') is True"
+      connector:
+        name: "google-genai"
+        command: "invoke_prompt"
+        model: "gemini-2.5-pro"
+      inputs:
+        title: "$.get('title')"
+        markets: "$.get('bulk-markets')"
+      outputs:
+        research-match-odds: "$"
+        research-match-odds-bulk: |
+          [
+            {
+              'questions': c.get('questions', ''),
+              'subject': c.get('subject', ''),
+              'text': c.get('content', ''),
+              'title': c.get('title', ''),
+              'metadata': {
+                **$.(agenda-metadata),
+                'content_type': 'odds-analysis',
+                'event_code': '$.(event_code)',
+                'event_title': '$.(content-name)',
+                'language': 'en'
+              }
+            }
+            for c in $.get('snippets', [])
+          ]
+
+    ## save / update documents
+
+    # update-documents-odds
+    - type: document
+      name: "update-documents-odds"
+      description: "Update the documents."
+      condition: "$.get('team_code') is not None and $.get('has_found_event') is True"
+      config:
+        action: "update"
+        embed-vector: true
+        force-update: true
+      connector:
+        name: "machina-ai"
+        command: "invoke_embedding"
+        model: "text-embedding-3-small"
+      documents:
+        market-odds: |
+          {
+            "execution": datetime.utcnow(),
+            "content": $.get('research-match-odds'),
+            "bulk-markets": $.get('bulk-markets'),
+            "title": f"{$.get('title')}",
+            "status": 'active'
+          }
+      metadata:
+        event_code: "$.get('event_code')"
+    
+    # update-snippets
+    - type: document
+      name: "update-snippets"
+      condition: "$.get('team_code') is not None and $.get('has_found_event') is True"
+      description: "Update the snippets."
+      config:
+        action: "bulk-save"
+        embed-vector: true
+        force-update: true
+      connector:
+        name: "machina-ai"
+        command: "invoke_embedding"
+        model: "text-embedding-3-small"
+      document_name: "'content-snippet'"
+      documents:
+        items: "$.get('parsed-items')"
+      inputs:
+        parsed-items: "$.get('research-match-odds-bulk')"
+
+    # VERSION CONTROL
+
+    # docs: agenda-version-control
+    - type: document
+      name: agenda-version-control-update
+      condition: "$.get('agenda-exists') is True"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      filters:
+        document_id: "$.get('agenda-document-id')"
+      documents:
+        content-agenda: |
+          {
+            **$.get('agenda-value', {}),
+            'agenda-control': {
+              **$.get('agenda-control', {}),
+              'counter': $.get('agenda-counter', 0) + 1,
+              'markets': True,
+              'moderated': True,
+              'snippets': True,
+              'processing': False,
+              'updated': datetime.utcnow()
+            }
+          }

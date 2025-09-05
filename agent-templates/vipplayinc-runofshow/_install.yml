@@ -1,0 +1,35 @@
+setup:
+  title: "VIP Play Inc. Run of Show"
+  description: AI-powered content generation for VIP Play Inc. Run of Show.
+  category:
+    - special-templates
+  estimatedTime: 15 minutes
+  features:
+    - AI Agent to generate articles, briefings, and snippets.
+    - AI Chat to answer questions about the Tennessee College Football Moderator.
+    - AI Image Generator to generate images for the blog, using a Tennessee College Football match as context.
+  integrations:
+    - sportradar
+  status: available
+  value: "agent-templates/vipplayinc-runofshow"
+  version: 1.0.0
+
+datasets:
+
+  - type: "workflow"
+    path: "custom-quizzes/executor.yml"
+
+  - type: "prompts"
+    path: "custom-quizzes/prompts.yml"
+
+  - type: "workflow"
+    path: "custom-polls/executor.yml"
+
+  - type: "prompts"
+    path: "custom-polls/prompts.yml"
+
+  - type: "workflow"
+    path: "custom-game/executor.yml"
+
+  - type: "prompts"
+    path: "custom-game/prompts.yml"

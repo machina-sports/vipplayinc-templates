@@ -1,0 +1,26 @@
+agent:
+
+  name: coverage-quizzes-from-history-consumer
+  title: "Coverage - Quizzes From History"
+  description: "Workflow to consume historical quiz content."
+  context:
+    config-frequency: 0.2
+  workflows:
+
+    # coverage quizzes from history service
+    - name: "coverage-quizzes-from-history-service"
+      description: "Coverage Quizzes From History Service"
+      outputs:
+        quizzes-history-service-status: "$.get('workflow-status', False)"
+
+    # coverage quizzes from history generator
+    - name: "coverage-quizzes-from-history-generator"
+      description: "Coverage Quizzes From History Generator"
+      outputs:
+        quizzes-history-generator-status: "$.get('workflow-status', False)"
+
+    # coverage quizzes from history executor
+    - name: "coverage-quizzes-from-history-executor"
+      description: "Coverage Quizzes From History Executor"
+      outputs:
+        quizzes-history-executor-status: "$.get('workflow-status', False)"

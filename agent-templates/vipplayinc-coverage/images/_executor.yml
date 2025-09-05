@@ -1,0 +1,244 @@
+workflow:
+
+  name: search-images-generate
+  title: "Search - Images Generate"
+  description: "Workflow to generate images."
+  context-variables:
+    debugger:
+      enabled: true
+    machina-ai:
+      api_key: "$TEMP_CONTEXT_VARIABLE_SDK_OPENAI_API_KEY"
+    storage:
+      api_key: "$TEMP_CONTEXT_VARIABLE_AZURE_BLOB_STRING"
+    oxylabs:
+      username: "$TEMP_CONTEXT_VARIABLE_OXYLABS_USERNAME"
+      password: "$TEMP_CONTEXT_VARIABLE_OXYLABS_PASSWORD"
+  inputs:
+    instruction: "$.get('instruction')"
+    limit: "$.get('limit', 10)"
+    parser: "($.get('parser', 'true') == 'true') and True or False"
+    query: $.get('query')
+    query2: $.get('query2')
+    snippet-id: "$.get('snippet-id')"
+    source: "$.get('source', 'google_search')"
+    udm: "int($.get('udm', 12))"
+  outputs:
+    parsed-content: "$.get('parsed-content')"
+    parsed-links: "$.get('parsed-links')"
+    workflow-status: "$.get('image_path') is not None and 'executed' or 'failed'"
+  tasks:
+
+    # load-quiz-by-code
+    - type: "document"
+      name: "load-quiz-by-code"
+      description: "Search quiz (sportradar) by code."
+      condition: "$.get('snippet-id') is not None"
+      config:
+        action: "search"
+        search-limit: 1
+        search-vector: false
+        search-sorters: ["start_time", 1]
+      filters:
+        document_id: "$.get('snippet-id')"
+      inputs:
+        name: "{'$in': ['content-quiz']}"
+      outputs:
+        has_error: "False"
+        quiz_exists: "len($.get('documents', [])) > 0 if $.get('documents') else False"
+        quiz_metadata: "$.get('documents')[0].get('metadata', {}) if $.get('documents') else None"
+        quiz_value: "$.get('documents')[0].get('value', {}) if $.get('documents') else None"
+        quiz_type: "$.get('documents')[0].get('name') if $.get('documents') else None"
+
+    # version-control-update-quiz
+    - type: "document"
+      name: "version-control-update-quiz"
+      description: "Update the quiz document version control."
+      condition: "$.get('quiz_exists') is True"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      filters:
+        document_id: "$.get('snippet-id')"
+      documents:
+        content-quiz: |
+          {
+            **$.get('quiz_value', {}),
+            'image-control': {
+              **$.get('quiz_value', {}).get('image-control', {}),
+              'has_error': "$.get('has_error')",
+              'processing': True
+            }
+          }
+      metadata:
+        content-group: "$.get('quiz_metadata', {}).get('content-group')"
+        content-name: "$.get('quiz_metadata', {}).get('content-name')"
+        content-topic: "$.get('quiz_metadata', {}).get('content-topic')"
+        event_code: "$.get('quiz_metadata', {}).get('event_code')"
+
+    # post-queries (1)
+    - type: connector
+      name: oxylabs-post-queries
+      description: "Search a web page."
+      condition: |
+        (
+          $.get('query') is not None
+          and $.get('quiz_exists') is True
+        )
+      connector:
+        name: oxylabs
+        command: "post-queries"
+      inputs:
+        body: |
+          {
+            "context": [
+              {
+                "key": "udm",
+                "value": $.get('udm', 12)
+              },
+              {
+                "key": "limit_per_page",
+                "value": [
+                  {
+                    "page": 1,
+                    "limit": $.get('limit')
+                  }
+                ]
+              }
+            ],
+            "parse": $.get('parser'),
+            "query": $.get('query'),
+            "source": $.get('source'),
+          }
+      outputs:
+        search-results: "$.get('results', [])[0].get('content')"
+        organic-results: "$.get('results', [])[0].get('content').get('results', {}).get('organic', []) if $.get('results', [])[0].get('content') else []"
+        organic-results-2: "[]"
+    
+    # post-queries (2)
+    - type: connector
+      name: oxylabs-post-queries
+      description: "Search a web page."
+      condition: |
+        (
+          $.get('query2') is not None
+          and $.get('quiz_exists') is True
+        )
+      connector:
+        name: oxylabs
+        command: "post-queries"
+      inputs:
+        body: |
+          {
+            "context": [
+              {
+                "key": "udm",
+                "value": $.get('udm', 12)
+              },
+              {
+                "key": "limit_per_page",
+                "value": [
+                  {
+                    "page": 1,
+                    "limit": $.get('limit')
+                  }
+                ]
+              }
+            ],
+            "parse": $.get('parser'),
+            "query": $.get('query2'),
+            "source": $.get('source'),
+          }
+      outputs:
+        search-results-2: "$.get('results', [])[0].get('content')"
+        organic-results-2: "$.get('results', [])[0].get('content').get('results', {}).get('organic', []) if $.get('results', [])[0].get('content') else []"
+
+    # generate image
+    - type: connector
+      name: generate-image
+      description: "Generate an image for a player card."
+      condition: |
+        (
+          len($.get('organic-results')) > 0
+          and $.get('quiz_exists') is True
+          and $.get('udm') == 2
+        )
+      connector:
+        name: machina-ai
+        command: "edit_image"
+      continue_on_error: true
+      inputs:
+        image_id: f"id-{$.get('snippet-id')}"
+        instruction: f"{$.get('instruction')} / {$.get('query')}"
+        images_base64: |
+          [
+            *[
+              d.get('image')
+              for d in $.get('organic-results')[:6]
+            ],
+            *[
+              d.get('image')
+              for d in $.get('organic-results-2')[:6]
+            ]
+          ]
+        model: "'gpt-image-1'"
+      outputs:
+        final_filename: f"quiz-image-{$.get('final_filename')}"
+        full_filepath: "$.get('full_filepath')"
+        generation_result: "$"
+        output_message: "$.get('error', {}).get('message')"
+
+    # store image
+    - type: connector
+      name: store-player-card-image
+      condition: |
+        (
+          len($.get('organic-results')) > 0
+          and $.get('quiz_exists') is True
+          and $.get('full_filepath') is not None
+          and $.get('final_filename') is not None
+          and $.get('udm') == 2
+        )
+      connector:
+        name: storage
+        command: "store_image"
+      continue_on_error: true
+      inputs:
+        final_filename: "$.get('final_filename')"
+        full_filepath: "$.get('full_filepath')"
+      outputs:
+        image_path: "$.get('data')"
+
+    # version-control-update-quiz
+    - type: "document"
+      name: "version-control-update-quiz"
+      description: "Update the quiz document version control."
+      condition: "$.get('quiz_exists') is True"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      filters:
+        document_id: "$.get('snippet-id')"
+      documents:
+        content-quiz: "$.get('docs_parsed')"
+      inputs:
+        docs_parsed: |
+          {
+            **$.get('quiz_value', {}),
+            'image-control': {
+              **$.get('quiz_value', {}).get('image-control', {}),
+              'final_filename': $.get('final_filename'),
+              'full_filepath': $.get('full_filepath'),
+              'image_path': $.get('image_path'),
+              'has_error': $.get('image_path') is None,
+              'message': $.get('image_path') is None and 'Failed to generate image' or $.get('output_message'),
+              'processing': False,
+              'updated': datetime.utcnow()
+            }
+          }
+      metadata:
+        content-group: "$.get('quiz_metadata', {}).get('content-group')"
+        content-name: "$.get('quiz_metadata', {}).get('content-name')"
+        content-topic: "$.get('quiz_metadata', {}).get('content-topic')"
+        event_code: "$.get('quiz_metadata', {}).get('event_code')"

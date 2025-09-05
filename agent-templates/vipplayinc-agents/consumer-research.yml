@@ -1,0 +1,212 @@
+agent:
+
+  name: coverage-researcher-consumers
+  title: "Coverage - Researcher Consumer"
+  description: "Workflow to cover Soccer Game Consumer."
+  context:
+    config-frequency: 0.2
+  workflows:
+
+    # REASONING
+
+    # Coverage Soccer Game Reasoning
+    - name: coverage-researcher-reasoning
+      description: "Coverage Soccer Game Reasoning"
+      inputs:
+        content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+      outputs:
+        soccer-game-reasoning-status: "$.get('workflow-status', False)"
+
+    # HISTORY
+
+    # Coverage Soccer Game History Searching
+    - name: coverage-researcher-searching
+      description: "Coverage Soccer Game History Searching"
+      inputs:
+        content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+        topic: "'history'"
+      outputs:
+        soccer-game-history-searching-status: "$.get('workflow-status', False)"
+
+    # Coverage Soccer Game History Moderation
+    - name: coverage-researcher-moderation
+      description: "Coverage Soccer Game History Moderation"
+      inputs:
+        content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+        topic: "'history'"
+      outputs:
+        soccer-game-history-moderation-status: "$.get('workflow-status', False)"
+
+    # Coverage Soccer Game History Snippets
+    - name: coverage-researcher-snippets
+      description: "Coverage Soccer Game History Snippets"
+      inputs:
+        content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+        topic: "'history'"
+      outputs:
+        soccer-game-history-snippets-status: "$.get('workflow-status', False)"
+
+    # Coverage Soccer Game History Stories
+    - name: coverage-researcher-stories
+      description: "Coverage Soccer Game History Stories"
+      inputs:
+        content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+        topic: "'history'"
+      outputs:
+        soccer-game-history-stories-status: "$.get('workflow-status', False)"
+
+    # INJURIES
+
+    # Coverage Soccer Game Injuries Searching
+    - name: coverage-researcher-searching
+      description: "Coverage Soccer Game Injuries Searching"
+      inputs:
+        content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+        topic: "'injuries'"
+      outputs:
+        soccer-game-injuries-searching-status: "$.get('workflow-status', False)"
+
+    # Coverage Soccer Game Injuries Moderation
+    - name: coverage-researcher-moderation
+      description: "Coverage Soccer Game Injuries Moderation"
+      inputs:
+        content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+        topic: "'injuries'"
+      outputs:
+        soccer-game-injuries-moderation-status: "$.get('workflow-status', False)"
+
+    # Coverage Soccer Game Injuries Snippets
+    - name: coverage-researcher-snippets
+      description: "Coverage Soccer Game Injuries Snippets"
+      inputs:
+        content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+        topic: "'injuries'"
+      outputs:
+        soccer-game-injuries-snippets-status: "$.get('workflow-status', False)"
+
+    # Coverage Soccer Game Injuries Stories
+    - name: coverage-researcher-stories
+      description: "Coverage Soccer Game Injuries Stories"
+      inputs:
+        content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+        topic: "'injuries'"
+      outputs:
+        soccer-game-injuries-stories-status: "$.get('workflow-status', False)"
+  
+    # MARKETS
+
+    # Coverage Soccer Game Markets
+    - name: coverage-researcher-markets
+      description: "Coverage Soccer Game Markets"
+      inputs:
+        content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+        topic: "'markets'"
+      outputs:
+        soccer-game-markets-status: "$.get('workflow-status', False)"
+    
+    # Coverage Soccer Game Markets Stories
+    - name: coverage-researcher-stories
+      description: "Coverage Soccer Game Markets Stories"
+      inputs:
+        content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+        topic: "'markets'"
+      outputs:
+        soccer-game-markets-stories-status: "$.get('workflow-status', False)"
+
+    # TRANSFERS
+
+    # Coverage Soccer Game Transfers Searching
+    - name: coverage-researcher-searching
+      description: "Coverage Soccer Game Transfers Searching"
+      inputs:
+        content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+        topic: "'transfers'"
+      outputs:
+        soccer-game-transfers-searching-status: "$.get('workflow-status', False)"
+
+    # Coverage Soccer Game Transfers Moderation
+    - name: coverage-researcher-moderation
+      description: "Coverage Soccer Game Transfers Moderation"
+      inputs:
+        content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+        topic: "'transfers'"
+      outputs:
+        soccer-game-transfers-moderation-status: "$.get('workflow-status', False)"
+
+    # Coverage Soccer Game Transfers Snippets
+    - name: coverage-researcher-snippets
+      description: "Coverage Soccer Game transfers Snippets"
+      inputs:
+        content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+        topic: "'transfers'"
+      outputs:
+        soccer-game-transfers-snippets-status: "$.get('workflow-status', False)"
+
+    # Coverage Soccer Game Transfers Stories
+    - name: coverage-researcher-stories
+      description: "Coverage Soccer Game Transfers Stories"
+      inputs:
+        content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+        topic: "'transfers'"
+      outputs:
+        soccer-game-transfers-stories-status: "$.get('workflow-status', False)"
+  
+    # TOP STORIES
+
+    # Coverage Soccer Game Top Stories Searching
+    - name: coverage-researcher-searching
+      description: "Coverage Soccer Game Top Stories Searching"
+      inputs:
+        content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+        topic: "'topstories'"
+      outputs:
+        soccer-game-topstories-searching-status: "$.get('workflow-status', False)"
+
+    # Coverage Soccer Game Top Stories Moderation
+    - name: coverage-researcher-moderation
+      description: "Coverage Soccer Game Top Stories Moderation"
+      inputs:
+        content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+        topic: "'topstories'"
+      outputs:
+        soccer-game-topstories-moderation-status: "$.get('workflow-status', False)"
+
+    # Coverage Soccer Game Top Stories Snippets
+    - name: coverage-researcher-snippets
+      description: "Coverage Soccer Game Top Stories Snippets"
+      inputs:
+        content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+        topic: "'topstories'"
+      outputs:
+        soccer-game-topstories-snippets-status: "$.get('workflow-status', False)"
+
+    # Coverage Soccer Game Stories
+    - name: coverage-researcher-stories
+      description: "Coverage Soccer Game Stories"
+      inputs:
+        content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+        topic: "'topstories'"
+      outputs:
+        soccer-game-stories-status: "$.get('workflow-status', False)"
+
+    # STANDINGS
+
+    # Coverage Soccer Game Standings
+    - name: coverage-researcher-standings
+      description: "Coverage Soccer Game Standings"
+      inputs:
+        content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+        topic: "$.get('topic', 'standings')"
+      outputs:
+        soccer-game-standings-status: "$.get('workflow-status', False)"
+
+    # STATISTICS
+
+    # Coverage Soccer Game Statistics
+    - name: coverage-researcher-statistics
+      description: "Coverage Soccer Game Statistics"
+      inputs:
+        content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+        topic: "$.get('topic', 'statistics')"
+      outputs:
+        soccer-game-statistics-status: "$.get('workflow-status', False)"

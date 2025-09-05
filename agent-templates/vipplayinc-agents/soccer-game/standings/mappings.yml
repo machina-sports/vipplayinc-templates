@@ -1,0 +1,50 @@
+mappings:
+
+  # coverage-researcher-standings-total
+  - type: mapping
+    name: coverage-researcher-standings-total
+    title: "Coverage - Mapping Soccer Game Researcher Standings (TOTAL)"
+    description: "Extract TOTAL standings table, top-5 summary, and selected team overview"
+    outputs:
+      competition_title: "next((s.get('groups', [])[0].get('name') for s in $.get('standings_root', {}).get('standings', []) if s.get('type') == 'total' and len(s.get('groups', [])) > 0), None)"
+      stage_info_summary: |
+        (lambda st: " | ".join([
+          f"Phase: {st.get('phase', '')}",
+          f"Type: {st.get('type', '')}",
+          f"Year: {st.get('year', '')}",
+          f"Start: {st.get('start_date', '')}",
+          f"End: {st.get('end_date', '')}"
+        ]))(next((s.get('groups', [])[0].get('stage', {}) for s in $.get('standings_root', {}).get('standings', []) if s.get('type') == 'total' and len(s.get('groups', [])) > 0), {}))
+      total_table: "next((s.get('groups', [])[0].get('standings', []) for s in $.get('standings_root', {}).get('standings', []) if s.get('type') == 'total' and len(s.get('groups', [])) > 0), [])"
+      team_row: "next((r for s in $.get('standings_root', {}).get('standings', []) if s.get('type') == 'total' for r in (s.get('groups', [])[0].get('standings', []) if len(s.get('groups', [])) > 0 else []) if r.get('competitor', {}).get('id') == $.get('team_code')), {})"
+      generated_at_gmt3: |
+        datetime.strptime($.get('standings_root', {}).get('generated_at'), '%Y-%m-%dT%H:%M:%S%z').astimezone(timezone(timedelta(hours=-3))).strftime('%d/%m/%Y %H:%M') if $.get('standings_root', {}).get('generated_at') else ''
+      standings_top10: |
+        " | ".join([
+          f"{row.get('rank')}. {row.get('competitor', {}).get('name')} - {row.get('points')} pts (W{row.get('win')}-D{row.get('draw')}-L{row.get('loss')}) GF {row.get('goals_for')}/GA {row.get('goals_against')} (GD {row.get('goals_diff')})"
+          for row in (next((s.get('groups', [])[0].get('standings', []) for s in $.get('standings_root', {}).get('standings', []) if s.get('type') == 'total' and len(s.get('groups', [])) > 0), []))[:10]
+        ])
+      standings_bottom10: |
+        " | ".join([
+          f"{row.get('rank')}. {row.get('competitor', {}).get('name')} - {row.get('points')} pts (W{row.get('win')}-D{row.get('draw')}-L{row.get('loss')}) GF {row.get('goals_for')}/GA {row.get('goals_against')} (GD {row.get('goals_diff')})"
+          for row in (next((s.get('groups', [])[0].get('standings', []) for s in $.get('standings_root', {}).get('standings', []) if s.get('type') == 'total' and len(s.get('groups', [])) > 0), []))[-10:]
+        ])
+      wrapped_team_summary: |
+        (lambda tr: " | ".join([
+          f"Team: {tr.get('competitor', {}).get('name', '')}",
+          f"Rank: {tr.get('rank', '')}",
+          f"Points: {tr.get('points', '')} (PPG {tr.get('points_per_game', '')})",
+          f"Record: W{tr.get('win', '')}-D{tr.get('draw', '')}-L{tr.get('loss', '')}",
+          f"Goals: GF {tr.get('goals_for', '')} / GA {tr.get('goals_against', '')} (GD {tr.get('goals_diff', '')})",
+          f"Form: {tr.get('competitor', {}).get('form', '')}",
+          f"Outcome: {tr.get('current_outcome', '')}"
+        ]))(
+          next((r for s in $.get('standings_root', {}).get('standings', []) if s.get('type') == 'total' for r in (s.get('groups', [])[0].get('standings', []) if len(s.get('groups', [])) > 0 else []) if r.get('competitor', {}).get('id') == $.get('team_code')), {})
+        )
+      team_rank: "next((r.get('rank') for s in $.get('standings_root', {}).get('standings', []) if s.get('type') == 'total' for r in (s.get('groups', [])[0].get('standings', []) if len(s.get('groups', [])) > 0 else []) if r.get('competitor', {}).get('id') == $.get('team_code')), None)"
+      team_points: "next((r.get('points') for s in $.get('standings_root', {}).get('standings', []) if s.get('type') == 'total' for r in (s.get('groups', [])[0].get('standings', []) if len(s.get('groups', [])) > 0 else []) if r.get('competitor', {}).get('id') == $.get('team_code')), None)"
+      team_points_per_game: "next((r.get('points_per_game') for s in $.get('standings_root', {}).get('standings', []) if s.get('type') == 'total' for r in (s.get('groups', [])[0].get('standings', []) if len(s.get('groups', [])) > 0 else []) if r.get('competitor', {}).get('id') == $.get('team_code')), None)"
+      team_goals_for: "next((r.get('goals_for') for s in $.get('standings_root', {}).get('standings', []) if s.get('type') == 'total' for r in (s.get('groups', [])[0].get('standings', []) if len(s.get('groups', [])) > 0 else []) if r.get('competitor', {}).get('id') == $.get('team_code')), None)"
+      team_goals_against: "next((r.get('goals_against') for s in $.get('standings_root', {}).get('standings', []) if s.get('type') == 'total' for r in (s.get('groups', [])[0].get('standings', []) if len(s.get('groups', [])) > 0 else []) if r.get('competitor', {}).get('id') == $.get('team_code')), None)"
+      team_goals_diff: "next((r.get('goals_diff') for s in $.get('standings_root', {}).get('standings', []) if s.get('type') == 'total' for r in (s.get('groups', [])[0].get('standings', []) if len(s.get('groups', [])) > 0 else []) if r.get('competitor', {}).get('id') == $.get('team_code')), None)"
+      team_form: "next((r.get('competitor', {}).get('form') for s in $.get('standings_root', {}).get('standings', []) if s.get('type') == 'total' for r in (s.get('groups', [])[0].get('standings', []) if len(s.get('groups', [])) > 0 else []) if r.get('competitor', {}).get('id') == $.get('team_code')), None)"

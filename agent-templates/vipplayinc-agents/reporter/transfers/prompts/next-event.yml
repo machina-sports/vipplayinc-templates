@@ -1,0 +1,33 @@
+prompts:
+
+  # coverage-reporter-transfers-next-event-prompt
+  - type: "prompt"
+    title: "Coverage - Reporter Next Match"
+    name: "coverage-reporter-transfers-next-event-prompt"
+    description: "Gera uma prévia objetiva do próximo confronto: onde, quando e contra quem."
+    instruction: |
+      Escreva em tom jornalístico, fluido e natural, em parágrafo corrido (sem listas).
+      Descreva o próximo confronto com base APENAS no contexto, deixando claro:
+      onde (casa/fora e estádio, se houver), quando (data/horário somente se estiver no contexto) e contra quem (adversário).
+      Inclua competição/fase e impactos relevantes (desfalques, possíveis substitutos e ajustes táticos) apenas se constarem no contexto.
+      Não invente informações. Não use emojis. Priorize clareza e concisão.
+    schema:
+      title: "PostBlogPreviaProximoJogoTime"
+      description: "Estrutura simples para a prévia do próximo confronto (onde, quando e contra quem)."
+      type: "object"
+      properties:
+        section_title:
+          type: "string"
+          description: "Título curto e natural para o próximo confronto (até 10 palavras). Evite fórmulas fixas; destaque o essencial (times, mando/estádio ou contexto relevante)."
+        section_content:
+          type: "string"
+          description: |
+            1 parágrafo, até 80 palavras, tom jornalístico e natural.
+            Sem listas. Deve:
+            - Indicar onde (casa/fora e estádio, se houver)
+            - Indicar quando (data/horário apenas se estiver no contexto)
+            - Indicar contra quem (adversário)
+            - Opcional: competição/fase, desfalques e impactos táticos somente se constarem no contexto
+      required:
+        - section_title
+        - section_content

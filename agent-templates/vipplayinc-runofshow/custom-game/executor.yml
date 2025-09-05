@@ -1,0 +1,170 @@
+workflow:
+
+  name: runofshow-custom-game-executor
+  title: "Run of Show - Custom Game"
+  description: "Run of Show Custom Game"
+  context-variables:
+    debugger:
+      enabled: true
+    google-genai:
+      api_key: "$TEMP_CONTEXT_VARIABLE_GOOGLE_GENERATIVE_AI_API_KEY"
+    machina-ai:
+      api_key: "$TEMP_CONTEXT_VARIABLE_SDK_OPENAI_API_KEY"
+  inputs:
+    custom-instruction: "$.get('custom_instruction') or None"
+  outputs:
+    generated-game: "$.get('generated-game', [])"
+    workflow-status: "'executed'"
+  tasks:
+
+    # prompt-sports-event-data
+    - type: prompt
+      name: prompt-sports-event-data
+      description: "prompt-custom-game"
+      connector:
+        name: "google-genai"
+        command: "invoke_prompt"
+        model: "gemini-2.5-pro"
+      inputs:
+        _custom-instruction: "$.get('custom-instruction')"
+      outputs:
+        generated-game: "$"
+        generated-game-code: "$.get('sport_event', {}).get('id', '')"
+
+    # bulk-content-custom-game
+    - type: document
+      name: bulk-content-custom-game
+      description: "Bulk save the game."
+      config:
+        action: "bulk-save"
+        embed-vector: false
+      document_name: "'soccer-game'"
+      documents:
+        items: "$.get('parsed_game', [])"
+      inputs:
+        parsed_game: |
+          [
+            {
+              **c,
+              "metadata": {
+                "event_code": c.get('sport_event', {}).get('id', '')
+              },
+              "version_control": {
+                "embed_image_status": "pending"
+              }
+            }
+            for c in [$.get('generated-game')]
+          ]
+
+    # mapping-soccer-event-summary
+    - type: mapping
+      name: mapping-soccer-event-summary
+      condition: "$.get('generated-game-code') is not ''"
+      inputs:
+        event_selected: "$.get('generated-game', {})"
+      outputs:
+        event_code: "$.get('event_code')"
+        season: "$.get('season')"
+        season_title: "$.get('season_title')"
+        sport_event: "$.get('sport_event')"
+        team_home_name: "$.get('team_home_name')"
+        team_away_name: "$.get('team_away_name')"
+        team_home_id: "$.get('team_home_id')"
+        team_away_id: "$.get('team_away_id')"
+        title: "$.get('title')"
+
+    # POLLS IN ADVANCE
+    
+    # mapping-date-prefix
+    - type: mapping
+      name: coverage-mapping-date-prefix
+      condition: "$.get('generated-game-code') is not ''"
+      outputs:
+        date_prefix: "$.get('date_prefix')"
+
+    # mapping-polls-in-advance-service
+    - type: mapping
+      name: coverage-mapping-polls-in-advance-service
+      condition: "$.get('generated-game-code') is not ''"
+      inputs:
+        date_prefix: "$.get('date_prefix')"
+        script_name: "'SPORTS_SOCCER_POLLS_IN_ADVANCE'"
+        team_home_name: "$.get('team_home_name', '').upper().replace(' ', '_')"
+        team_away_name: "$.get('team_away_name', '').upper().replace(' ', '_')"
+      outputs:
+        agenda-required: "$.get('agenda-required')"
+        content-group: "$.get('content-group')"
+        content-name: "$.get('content-name')"
+        coverage-indexes: "$.get('coverage-indexes')"
+
+    # polls-in-advance-populate-scripts
+    - type: document
+      name: polls-in-advance-populate-scripts
+      condition: "$.get('generated-game-code') is not ''"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      documents:
+        content-script: |
+          {
+            "agenda-required": $.get('agenda-required'),
+            "custom_instruction": $.get('custom_instruction'),
+            "custom_topic_name": $.get('custom_topic_name'),
+            "indexes": $.get('coverage-indexes'),
+            "name": "content-script",
+            "title": $.get('content-name'),
+            "web-search-limit": 3
+          }
+      metadata:
+        content-group: "$.get('content-group')"
+        content-name: "$.get('content-name')"
+        event_code: "$.get('event_code')"
+
+    # HISTORY RESEARCHER
+
+    # map-service-script
+    - type: mapping
+      name: coverage-researcher-service-map
+      condition: "$.get('generated-game-code') is not ''"
+      inputs:
+        date_prefix: "$.get('date_prefix')"
+        event_title: "$.get('title')"
+        season_title: "$.get('season_title')"
+        selected-topics: "['history']"
+        team_home_id: "$.get('team_home_id')"
+        team_away_id: "$.get('team_away_id')"
+        team_home_name: "$.get('team_home_name', '').upper().replace(' ', '_')"
+        team_away_name: "$.get('team_away_name', '').upper().replace(' ', '_')"
+      outputs:
+        content-group: "$.get('content-group')"
+        content-name: "$.get('content-name')"
+        content-title: "$.get('content-title')"
+        coverage-indexes: "$.get('coverage-indexes')"
+
+    # save-content-script
+    - type: document
+      name: save-content-script
+      condition: "$.get('generated-game-code') is not ''"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      documents:
+        content-script: |
+          {
+            "name": "content-script",
+            "title": $.get('content-title'),
+            "indexes": $.get('coverage-indexes'),
+            "event_title": $.get('event_title'),
+            "season_title": $.get('season_title'),
+            "team_home_id": $.get('team_home_id'),
+            "team_away_id": $.get('team_away_id'),
+            "team_home_name": $.get('team_home_name'),
+            "team_away_name": $.get('team_away_name'),
+            "agenda-required": []
+          }
+      metadata:
+        content-group: "$.get('content-group')"
+        content-name: "$.get('content-name')"
+        event_code: "$.get('event_code')"

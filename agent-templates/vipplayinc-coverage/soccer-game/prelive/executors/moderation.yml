@@ -1,0 +1,261 @@
+workflow:
+
+  name: coverage-event-prelive-executor-moderation
+  title: "Coverage - Prelive Introduction Executor Moderation"
+  description: "Workflow to execute Prelive Introduction content moderation."
+  context-variables:
+    debugger:
+      enabled: true
+    google-genai:
+      api_key: "$TEMP_CONTEXT_VARIABLE_GOOGLE_GENERATIVE_AI_API_KEY"
+    machina-ai:
+      api_key: "$TEMP_CONTEXT_VARIABLE_SDK_OPENAI_API_KEY"
+  outputs:
+    workflow-status: "$.get('workflow-status', 'skipped')"
+  tasks:
+
+    # docs: load-next-agenda
+    - type: document
+      name: load-next-agenda
+      connector:
+        name: machina-ai
+        command: "invoke_embedding"
+        model: "text-embedding-3-small"
+      config:
+        action: "search"
+        search-limit: 1
+        search-vector: false
+        search-sorters: ["value.agenda-control.updated", 1]
+      filters:
+        metadata.content-group: "{'$in': ['SPORTS_SOCCER_PRELIVE']}"
+        value.agenda-control.finished: "{'$ne': True}"
+        value.agenda-control.moderated: "{'$ne': True}"
+        value.agenda-control.processing: "{'$ne': True}"
+        value.agenda-control.searching: "True"
+      inputs:
+        name: "'content-agenda'"
+      outputs:
+        agenda-exists: "len($.get('documents', [])) > 0 if $.get('documents') else False"
+        agenda-document: "$.get('documents', [{}])[0] if $.get('documents') else None"
+        agenda-document-id: "$.get('documents', [{}])[0].get('_id', '') if $.get('documents') else ''"
+        agenda-metadata: "$.get('documents', [{}])[0].get('metadata', {}) if $.get('documents') else None"
+        agenda-value: "$.get('documents', [{}])[0].get('value', {}) if $.get('documents') else None"
+
+    # docs: agenda-version-control
+    - type: document
+      name: agenda-version-control-processing
+      condition: "$.get('agenda-exists') is True"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      filters:
+        document_id: "$.get('agenda-document-id')"
+      documents:
+        content-agenda: |
+          {
+            **$.get('agenda-value', {}),
+            'agenda-control': {
+              **$.get('agenda-control', {}),
+              'processing': True,
+              'updated': datetime.utcnow()
+            }
+          }
+
+    # map: coverage-mapping-agenda-control
+    - type: mapping
+      name: coverage-mapping-agenda-control
+      condition: "$.get('agenda-exists') is True"
+      inputs:
+        _document: "$.get('agenda-value')"
+        _metadata: "$.get('agenda-metadata')"
+      outputs:
+        agenda-counter: "$.get('agenda-counter')"
+        agenda-control: "$.get('agenda-control')"
+        agenda-control-finished: "$.get('agenda-control', {}).get('finished', False)"
+        agenda-control-searching: "$.get('agenda-control', {}).get('searching', False)"
+        content-group: "$.get('content-group')"
+        content-name: "$.get('content-name')"
+        content-topic: "$.get('content-topic')"
+        event_code: "$.get('event_code')"
+        instructions: "$.get('script-instructions')"
+
+    # docs: load-searches-and-scrapings
+    - type: document
+      name: load-searches-and-scrapings
+      condition: "$.get('agenda-exists') is True"
+      config:
+        action: "search"
+        search-limit: 100
+        search-vector: false
+        search-sorters: ["value.version_control.updated", 1]
+      filters:
+        metadata.content-group: "$.get('content-group', '')"
+        metadata.content-name: "$.get('content-name', '')"
+        metadata.content-topic: "$.get('content-topic', '')"
+      inputs:
+        name: "{'$in': ['web-search', 'web-scraping']}"
+      outputs:
+        search-and-scrapings-documents: "$.get('documents', [])"
+
+    # mapping-web-search-items
+    - type: mapping
+      name: coverage-event-prelive-websearch-map
+      condition: "$.get('agenda-exists') is True"
+      inputs:
+        _documents: "$.get('search-and-scrapings-documents', [])"
+      outputs:
+        agenda-control-searching: |
+          (
+            $.(agenda-exists) is True
+            and len($.get('web-search-pending')) > 0
+          )
+        agenda-control-moderated: |
+          (
+            $.(agenda-exists) is True
+            and len($.get('web-search-finished')) > 0
+            and len($.get('web-search-pending')) == 0
+          )
+        version-control-status: |
+          (
+            $.(agenda-exists) is True
+            and len($.get('web-search-finished')) > 0
+            and len($.get('web-search-pending')) == 0
+          ) and 'finished' or $.get('version-control-status')
+        web-search-items: "$.get('web-search-items', [])"
+        web-search-finished: "len($.get('web-search-finished', []))"
+        web-search-processing: "len($.get('web-search-processing', []))"
+        web-search-pending: "len($.get('web-search-pending', []))"
+        web-search-unmoderated: "$.get('web-search-unmoderated', [])"
+        web-search-unmoderated-count: "len($.get('web-search-unmoderated', []))"
+        web-search-next-to-be-moderated: "$.get('web-search-next-to-be-moderated', None)"
+        workflow-status: |
+          (
+            $.(agenda-exists) is True
+            and len($.get('web-search-next-to-be-moderated-count', 0)) > 0
+          ) and 'executed' or $.get('workflow-status')
+
+    # docs: web-search-version-control
+    - type: document
+      name: web-search-version-control
+      condition: "$.get('agenda-exists') is True and $.get('web-search-next-to-be-moderated') is not None"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      filters:
+        document_id: "$.get('web-search-next-to-be-moderated', {}).get('_id', '')"
+      documents:
+        web-search: |
+          {
+            **$.get('web-search-next-to-be-moderated', {}).get('value', {}),
+            'version_control': {
+              'finished': True,
+              'moderated': False,
+              'moderating': True,
+              'processing': True,
+              'updated': datetime.utcnow()
+            }
+          }
+
+    # FOREACH MODERATION
+
+    # prompt: coverage-event-prelive-web-search-unmoderated
+    - type: prompt
+      name: coverage-event-prelive-web-search-unmoderated
+      condition: "$.get('web-search-unmoderated-count') > 0"
+      connector:
+        name: "google-genai"
+        command: "invoke_prompt"
+        model: "gemini-2.5-pro"
+      foreach:
+        name: search-item
+        expr: "$"
+        value: "$.get('web-search-next-to-be-moderated', {}).get('value', {}).get('content', [])"
+      inputs:
+        _agenda-instructions: "$.get('instructions')"
+        _web-search-query: "$.get('web-search-next-to-be-moderated', {}).get('value', {}).get('web-search-query', '')"
+        _url-to-be-moderated: "$.get('search-item', {})"
+      outputs:
+        approved-web-search-unmoderated: |
+          [
+            {
+              'title': $.get('url', ''),
+              'web-scraping-url': $.get('url', ''),
+              'relevance': $.get('relevance', 0),
+              'approved': $.get('approved', False)
+            }
+          ]
+
+    # docs: create-web-scraping-links
+    - type: "document"
+      name: "create-web-scraping-links"
+      description: "Create a web scraping links."
+      condition: "$.get('agenda-exists') is True"
+      config:
+        action: "bulk-save"
+        embed-vector: false
+        force-update: true
+      document_name: "'web-scraping'"
+      documents:
+        items: "$.get('parsed-items', [])"
+      inputs:
+        parsed-items: |
+          [
+            {
+              **item,
+              'metadata': $.(agenda-metadata)
+            }
+            for item in $.get('approved-web-search-unmoderated', [])
+            if item.get('approved', False) is True
+          ]
+
+    # VERSION CONTROL
+
+    # docs: web-search-version-control
+    - type: document
+      name: web-search-version-control
+      condition: "$.get('agenda-exists') is True and $.get('web-search-next-to-be-moderated') is not None"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      filters:
+        document_id: "$.get('web-search-next-to-be-moderated', {}).get('_id', '')"
+      documents:
+        web-search: |
+          {
+            **$.get('web-search-next-to-be-moderated', {}).get('value', {}),
+            'version_control': {
+              'finished': True,
+              'moderated': True,
+              'moderating': False,
+              'processing': False,
+              'updated': datetime.utcnow()
+            }
+          }
+
+    # docs: agenda-version-control
+    - type: document
+      name: agenda-version-control-update
+      condition: "$.get('agenda-exists') is True"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      filters:
+        document_id: "$.get('agenda-document-id')"
+      documents:
+        content-agenda: |
+          {
+            **$.get('agenda-value', {}),
+            'agenda-control': {
+              **$.get('agenda-control', {}),
+              'counter': $.get('agenda-counter', 0) + 1,
+              'finished': False,
+              'moderated': $.get('agenda-control-moderated', False),
+              'processing': False,
+              'searching': $.get('agenda-control-searching', False),
+              'updated': datetime.utcnow()
+            }
+          }

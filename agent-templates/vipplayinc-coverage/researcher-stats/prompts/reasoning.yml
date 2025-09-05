@@ -1,0 +1,30 @@
+prompts:
+
+  # prompt-coverage-researcher-stats-reasoning
+  - type: prompt
+    name: prompt-coverage-researcher-stats-reasoning
+    title: "Coverage - Researcher Stats Generator"
+    description: "Generate editorial briefing script for a game"
+    schema:
+      title: "PromptGameCoverageGenerator"
+      description: "Generate editorial briefing script for a game"
+      required: [
+        "title",
+        "content",
+        "subject",
+        "script_code"
+      ]
+      type: "object"
+      properties:
+        content:
+          type: "string"
+          description: "Brief editorial outline highlighting key focus points and angles for the topic coverage, including specific areas to research and data points to gather"
+        title:
+          type: "string"
+          description: "Engaging title that clearly represents the topic or subject being researched"
+        subject:
+          type: "string"
+          description: "Main focus of the coverage (e.g., 'UEFA Nations League statistics analysis', 'Premier League top scorers history', 'Champions League knockout records')"
+        script_code:
+          type: "string"
+          description: "Coverage type code that categorizes the research focus"

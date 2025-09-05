@@ -1,0 +1,65 @@
+prompts:
+
+  # soccer-prompt-article-es-image-briefing
+  - type: prompt
+    name: soccer-prompt-article-br-image-briefing
+    title: "Soccer Prompt Article BR - Image Briefing"
+    description: Produce um briefing para uma imagem principal para um post do blog em português sobre um jogo que ainda não ocorreu.
+    schema:
+      title: "PostBlogPreviaImagenBR"
+      description: Produce um briefing para uma imagem principal para um post do blog em português
+      type: "object"
+      properties:
+        section_1_image:
+          type: "string"
+          description: "Nome da imagem para a primeira seção exemplo real_madrid_fundacao_1902 (sem extensão)"
+        section_1_image_query:
+          type: "string"
+          description: "Query em inglês para buscar imagens no google exemplo Real Madrid 1902"
+        section_2_image:
+          type: "string"
+          description: "Nome da imagem para a segunda seção exemplo real_madrid_anos80_europeo (sem extensão)"
+        section_2_image_query:
+          type: "string"
+          description: "Query em inglês para buscar imagens no google exemplo Real Madrid 1980"
+        section_3_image:
+          type: "string"
+          description: "Nome da imagem para a terceira seção exemplo real_madrid_idolos_legends (sem extensão)"
+        section_3_image_query:
+          type: "string"
+          description: "Query em inglês para buscar imagens no google exemplo Real Madrid idols"
+        section_4_image:
+          type: "string"
+          description: "Nome da imagem para a quarta seção exemplo bernabeu_estadio_fans (sem extensão)"
+        section_4_image_query:
+          type: "string"
+          description: "Query em inglês para buscar imagens no google exemplo santiago bernabeu fans"
+        section_5_image:
+          type: "string"
+          description: "Nome da imagem para a quinta seção exemplo real_madrid_treinador_2025 (sem extensão)"
+        section_5_image_query:
+          type: "string"
+          description: "Query em inglês para buscar imagens no google exemplo real madrid manager 2025"
+        image_briefing:
+          type: "string"
+          description: "Briefing para imagen principal."
+        main_image_query:
+          type: "string"
+          description: "Query em inglês para buscar imagens no google exemplo Real Madrid 2025"
+        main_image_name:
+          type: "string"
+          description: "Nome da imagem para a imagem principal exemplo main_image (sem extensão)"
+      required: 
+        - section_1_image
+        - section_1_image_query
+        - section_2_image
+        - section_2_image_query
+        - section_3_image
+        - section_3_image_query
+        - section_4_image
+        - section_4_image_query
+        - section_5_image
+        - section_5_image_query
+        - image_briefing
+        - main_image_query
+        - main_image_name

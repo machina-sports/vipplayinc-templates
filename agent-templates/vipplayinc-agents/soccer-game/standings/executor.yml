@@ -1,0 +1,228 @@
+workflow:
+
+  name: coverage-researcher-standings
+  title: "Coverage - Researcher Standings"
+  description: "Workflow to execute Soccer Game Researcher content standings."
+  context-variables:
+    debugger:
+      enabled: true
+    google-genai:
+      api_key: "$TEMP_CONTEXT_VARIABLE_GOOGLE_GENERATIVE_AI_API_KEY"
+    machina-ai:
+      api_key: "$TEMP_CONTEXT_VARIABLE_SDK_OPENAI_API_KEY"
+    sportradar-soccer:
+      sportradar_api_key: "$TEMP_CONTEXT_VARIABLE_SPORTRADAR_SOCCER_V4_API_KEY"
+  inputs:
+    content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+    topic: "$.get('topic', 'standings')"
+  outputs:
+    workflow-status: "$.get('workflow-status', 'skipped')"
+  tasks:
+
+    # docs: load-next-agenda
+    - type: document
+      name: load-next-agenda
+      connector:
+        name: machina-ai
+        command: "invoke_embedding"
+        model: "text-embedding-3-small"
+      config:
+        action: "search"
+        search-limit: 1
+        search-vector: false
+        search-sorters: ["value.agenda-control.updated", 1]
+      filters:
+        metadata.content-group: "$.get('content-group')"
+        value.agenda-control.finished: "{'$ne': True}"
+        value.agenda-control.processing: "{'$ne': True}"
+        value.agenda-object.topic: "$.get('topic')"
+      inputs:
+        name: "'content-agenda'"
+      outputs:
+        agenda-exists: "len($.get('documents', [])) > 0 if $.get('documents') else False"
+        agenda-document: "$.get('documents', [{}])[0] if $.get('documents') else None"
+        agenda-document-id: "$.get('documents', [{}])[0].get('_id', '') if $.get('documents') else ''"
+        agenda-metadata: "$.get('documents', [{}])[0].get('metadata', {}) if $.get('documents') else None"
+        agenda-value: "$.get('documents', [{}])[0].get('value', {}) if $.get('documents') else None"
+
+    # map: coverage-mapping-agenda-control
+    - type: mapping
+      name: coverage-mapping-agenda-control
+      condition: "$.get('agenda-exists') is True"
+      inputs:
+        _document: "$.get('agenda-value')"
+        _metadata: "$.get('agenda-metadata')"
+      outputs:
+        agenda-counter: "$.get('agenda-counter')"
+        agenda-control: "$.get('agenda-control')"
+        agenda-control-finished: "$.get('agenda-control', {}).get('finished', False)"
+        content-group: "$.get('content-group')"
+        content-name: "$.get('content-name')"
+        content-topic: "$.get('content-topic')"
+        event_code: "$.get('event_code')"
+        team_code: "$.get('team_code')"
+        instructions: "$.get('script-instructions')"
+        workflow-status: "'executed'"
+
+    # docs: agenda-version-control
+    - type: document
+      name: agenda-version-control-processing
+      condition: "$.get('agenda-exists') is True"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      filters:
+        document_id: "$.get('agenda-document-id')"
+      documents:
+        content-agenda: |
+          {
+            **$.get('agenda-value', {}),
+            'agenda-control': {
+              **$.get('agenda-control', {}),
+              'processing': True,
+              'updated': datetime.utcnow()
+            }
+          }
+
+    # FETCH EVENT & STANDINGS
+
+    # load-event-by-code
+    - type: document
+      name: load-event-by-code
+      condition: "$.get('event_code') is not None"
+      config:
+        action: "search"
+        search-limit: 1
+        search-vector: false
+        search-sorters: ["value.start_time", 1]
+      filters:
+        metadata.event_code: "$.get('event_code')"
+      inputs:
+        name: "{'$in': ['soccer-game']}"
+      outputs:
+        game-exists: "len($.get('documents', [])) > 0 if $.get('documents') else False"
+        game-metadata: "$.get('documents')[0].get('metadata', {}) if $.get('documents') else None"
+        game-value: "$.get('documents')[0].get('value', {}) if $.get('documents') else None"
+
+    # coverage-mapping-sportradar-soccer
+    - type: mapping
+      name: coverage-mapping-sportradar-soccer
+      description: "Transform the sportradar soccer data"
+      condition: "$.get('game-exists') is True"
+      inputs:
+        event_selected: "$.get('game-value')"
+      outputs:
+        season_id: "$.get('season')"
+
+    # fetch-standings
+    - type: "connector"
+      name: "fetch-standings"
+      description: "Get a standings data from SportRadar" 
+      condition: "$.get('season_id') is not None"
+      connector:
+        name: "sportradar-soccer"
+        command: "get-seasons/{season_id}/{data_type}"
+        command_attribute:
+          season_id: "$.get('season_id')"
+          data_type: "'standings.json'"
+      inputs:
+        api_key: "$.get('sportradar_api_key')"
+      outputs:
+        result-standings: "$"
+
+    # map: coverage-researcher-standings-total
+    - type: mapping
+      name: coverage-researcher-standings-total
+      description: "Extract TOTAL group standings and useful summaries"
+      condition: "$.get('result-standings') is not None"
+      inputs:
+        standings_root: "$.get('result-standings')"
+        team_code: "$.get('team_code')"
+      outputs:
+        competition_title: "$.get('competition_title')"
+        stage_info_summary: "$.get('stage_info_summary')"
+        generated_at_gmt3: "$.get('generated_at_gmt3')"
+        standings_top10: "$.get('standings_top10')"
+        standings_bottom10: "$.get('standings_bottom10')"
+        team_summary: "$.get('wrapped_team_summary')"
+
+    # prompt: coverage-researcher-standings-prompt
+    - type: prompt
+      name: coverage-researcher-standings-prompt
+      description: "Generate standings analysis using TOTAL table"
+      condition: "$.get('result-standings') is not None and $.get('team_code') is not None"
+      connector:
+        name: "google-genai"
+        command: "invoke_prompt"
+        model: "gemini-2.5-pro"
+      inputs:
+        stage_info_summary: "$.get('stage_info_summary')"
+        standings_top10: "$.get('standings_top10')"
+        standings_bottom10: "$.get('standings_bottom10')"
+        team_summary: "$.get('team_summary')"
+      outputs:
+        research-standings-bulk: |
+          [
+            {
+              'subject': 'Tabela (Total)',
+              'text': c.get('content', ''),
+              'title': f"{c.get('title', '')}",
+              'metadata': {
+                'competitor_id': '$.(team_code)',
+                'content_type': 'standings-analysis',
+                'content-group': '$.(content-group)',
+                'content-name': '$.(content-name)',
+                'content-topic': '$.(content-topic)',
+                'event_code': '$.(event_code)'
+              }
+            }
+            for c in $.get('snippets', [])
+          ]
+
+    # VERSION CONTROL
+
+    # update-snippets
+    - type: "document"
+      name: "update-snippets"
+      condition: "$.get('team_code') is not None"
+      description: "Update the snippets."
+      config:
+        action: "bulk-save"
+        embed-vector: true
+        force-update: true
+      connector:
+        name: "machina-ai"
+        command: "invoke_embedding"
+        model: "text-embedding-3-small"
+      document_name: "'content-snippet'"
+      documents:
+        items: "$.get('parsed-items')"
+      inputs:
+        parsed-items: |
+          [
+            *$.get('research-standings-bulk', [])
+          ]
+
+    # docs: agenda-version-control
+    - type: document
+      name: agenda-version-control-update
+      condition: "$.get('agenda-exists') is True"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      filters:
+        document_id: "$.get('agenda-document-id')"
+      documents:
+        content-agenda: |
+          {
+            **$.get('agenda-value', {}),
+            'agenda-control': {
+              **$.get('agenda-control', {}),
+              'counter': $.get('agenda-counter', 0) + 1,
+              'finished': True,
+              'processing': False,
+              'updated': datetime.utcnow()
+            }
+          }

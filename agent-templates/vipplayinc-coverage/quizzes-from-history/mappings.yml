@@ -1,0 +1,186 @@
+mappings:
+
+  # coverage-mapping-quizzes-from-history-custom-instruction
+  - type: mapping
+    name: coverage-mapping-quizzes-from-history-custom-instruction
+    title: "Coverage - Mapping Quizzes From History Custom Instruction"
+    description: "Mapping data from historical quiz generation"
+    outputs:
+      quizzes-history-control: |
+        $.get('_document', {}).get('quizzes-history-control', {}) if $.get('_document') else {}
+      quizzes-history-control-status: |
+        $.get('_document', {}).get('quizzes-history-control', {}).get('status', 'pending') if $.get('_document') else 'pending'
+      quizzes-history-control-new-queries: |
+        [
+          {
+            'metadata': {
+              'content-group': $.get('_metadata', {}).get('content-group', ''),
+              'content-name': $.get('_metadata', {}).get('content-name', ''),
+              'content-topic': $.get('_metadata', {}).get('content-topic', ''),
+              'event_code': $.get('_metadata', {}).get('event_code', '')
+            },
+            'quizzes-history-control': {
+              'finished': False,
+              'processing': False,
+              'updated': datetime.utcnow()
+            },
+            'title': item.get('query'),
+            'web-search-udm': $.get('_document', {}).get('agenda-object', {}).get('web-search-udm', 12),
+            'web-search-limit': $.get('_document', {}).get('agenda-object', {}).get('web-search-limit', 10),
+            'web-search-topic': item.get('type'),
+            'web-search-query': item.get('query'),
+          }
+          for item in $.get('_document', {}).get('agenda-object', {}).get('search_queries', [])
+        ]
+
+  # coverage-mapping-quizzes-from-history-control
+  - type: mapping
+    name: coverage-mapping-quizzes-from-history-control
+    title: "Coverage - Mapping Quizzes From History Control"
+    description: "Mapping data from historical quiz generation"
+    outputs:
+      quizzes-history-control: |
+        $.get('_document', {}).get('quizzes-history-control', {}) if $.get('_document') else {}
+      quizzes-history-control-status: |
+        $.get('_document', {}).get('quizzes-history-control', {}).get('status', 'pending') if $.get('_document') else 'pending'
+      quizzes-history-control-new-queries: |
+        [
+          {
+            'metadata': {
+              'content-group': $.get('_metadata', {}).get('content-group', ''),
+              'content-name': $.get('_metadata', {}).get('content-name', ''),
+              'content-topic': $.get('_metadata', {}).get('content-topic', ''),
+              'event_code': $.get('_metadata', {}).get('event_code', '')
+            },
+            'quizzes-history-control': {
+              'finished': False,
+              'processing': False,
+              'updated': datetime.utcnow()
+            },
+            'web-search-udm': 12,
+            'web-search-limit': 4,
+            'web-search-topic': 'TEAM_RECENT_NEWS',
+            'title': f"(Football) {$.get('_document', {}).get('agenda-object', {}).get('team_home', '')} vs {$.get('_document', {}).get('agenda-object', {}).get('team_away', '')} news after:{(datetime.utcnow() - timedelta(days=3)).strftime('%Y-%m-%d')}",
+            'web-search-query': f"(Football) {$.get('_document', {}).get('agenda-object', {}).get('team_home', '')} vs {$.get('_document', {}).get('agenda-object', {}).get('team_away', '')} news after:{(datetime.utcnow() - timedelta(days=3)).strftime('%Y-%m-%d')}"
+          },
+          {
+            'metadata': {
+              'content-group': $.get('_metadata', {}).get('content-group', ''),
+              'content-name': $.get('_metadata', {}).get('content-name', ''),
+              'content-topic': $.get('_metadata', {}).get('content-topic', ''),
+              'event_code': $.get('_metadata', {}).get('event_code', '')
+            },
+            'quizzes-history-control': {
+              'finished': False,
+              'processing': False,
+              'updated': datetime.utcnow()
+            },
+            'web-search-udm': 1,
+            'web-search-limit': 2,
+            'web-search-topic': 'TEAM_HISTORIC_ACHIEVEMENTS',
+            'title': f"(Football) {$.get('_document', {}).get('agenda-object', {}).get('team_home', '')} vs {$.get('_document', {}).get('agenda-object', {}).get('team_away', '')} historical facts and players in wikipedia",
+            'web-search-query': f"(Football) {$.get('_document', {}).get('agenda-object', {}).get('team_home', '')} vs {$.get('_document', {}).get('agenda-object', {}).get('team_away', '')} historical facts and players in wikipedia"
+          }
+        ]
+      quizzes-history-control-queries: |
+        [
+          {
+            'metadata': {
+              'content-group': $.get('_metadata', {}).get('content-group', ''),
+              'content-name': $.get('_metadata', {}).get('content-name', ''),
+              'content-topic': $.get('_metadata', {}).get('content-topic', ''),
+              'event_code': $.get('_metadata', {}).get('event_code', '')
+            },
+            'quizzes-history-control': {
+              'finished': False,
+              'processing': False,
+              'updated': datetime.utcnow()
+            },
+            'web-search-udm': $.get('_document', {}).get('agenda-object', {}).get('web-search-udm', 12),
+            'web-search-limit': $.get('_document', {}).get('agenda-object', {}).get('web-search-limit', 10),
+            'web-search-topic': item.get('type'),
+            'web-search-query': item.get('query'),
+          }
+          for item in $.get('_document', {}).get('agenda-object', {}).get('search_queries', [])
+        ]
+
+  # coverage-mapping-quizzes-from-history-items
+  - type: mapping
+    name: coverage-mapping-quizzes-from-history-items
+    title: "Coverage - Mapping Quizzes From History Items"
+    description: "Mapping data from historical quiz generation items"
+    outputs:
+      quizzes-history-items: |
+        [
+          {
+            **d.get('value', {}),
+            'metadata': d.get('metadata', {})
+          }
+          for d in $.get('_documents', [])
+          if d.get('name', '') == 'web-scraping'
+        ]
+      quizzes-history-finished: |
+        [
+          item
+          for item in $.get('_documents', [])
+          if item.get('value', {}).get('version_control', {}).get('finished', False) == True
+        ]
+      quizzes-history-processing: |
+        [
+          item
+          for item in $.get('_documents', [])
+          if item.get('value', {}).get('version_control', {}).get('processing', False) == True
+        ]
+      quizzes-history-pending: |
+        [
+          item
+          for item in $.get('_documents', [])
+          if item.get('value', {}).get('version_control', {}).get('finished', False) == False
+        ]
+
+  # coverage-mapping-quizzes-from-history-service
+  - type: mapping
+    name: coverage-mapping-quizzes-from-history-service
+    title: "Coverage - Mapping Quizzes From History Service"
+    description: "Mapping data from historical quiz generation service"
+    outputs:
+      agenda-required: |
+        []
+      content-group: |
+        f"{$.('script_name')}"
+      content-name: |
+        f"{$.('date_prefix')}-{$.('team_home_name')}-X-{$.('team_away_name')}-QUIZZES_FROM_HISTORY"
+      coverage-indexes: |
+        [
+          {
+            "title": "Historical Facts",
+            "description": "Historical trivia questions about team facts and achievements",
+            "index": f"{$.('date_prefix')}-{$.('team_home_name')}-X-{$.('team_away_name')}-QUIZZES_FROM_HISTORY-HISTORICAL_FACTS"
+          },
+          {
+            "title": "Legendary Players",
+            "description": "Quiz questions about legendary players and their achievements",
+            "index": f"{$.('date_prefix')}-{$.('team_home_name')}-X-{$.('team_away_name')}-QUIZZES_FROM_HISTORY-LEGENDARY_PLAYERS"
+          },
+          {
+            "title": "Historic Matches",
+            "description": "Trivia about memorable matches and classic encounters",
+            "index": f"{$.('date_prefix')}-{$.('team_home_name')}-X-{$.('team_away_name')}-QUIZZES_FROM_HISTORY-HISTORIC_MATCHES"
+          },
+          {
+            "title": "Records & Statistics",
+            "description": "Quiz questions about team records and statistical achievements",
+            "index": f"{$.('date_prefix')}-{$.('team_home_name')}-X-{$.('team_away_name')}-QUIZZES_FROM_HISTORY-RECORDS_STATS"
+          }
+        ]
+
+  # coverage-mapping-quizzes-from-history-results
+  - type: mapping
+    name: coverage-mapping-quizzes-from-history-results
+    title: "Coverage - Mapping Quizzes From History Results"
+    description: "Mapping data from historical quiz generation results"
+    outputs:
+      quizzes-results: |
+        [
+          *$.get('_content-quizzes', [])
+        ]

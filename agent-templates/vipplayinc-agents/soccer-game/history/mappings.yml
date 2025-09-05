@@ -1,0 +1,37 @@
+mappings:
+
+  # coverage-researcher-history-searching-map
+  - type: mapping
+    name: coverage-researcher-history-searching-map
+    title: "Coverage - Researcher History Searching Mapping"
+    description: "Mapping data from Soccer Game History content generation"
+    outputs:
+      version-control: |
+        $.get('_document', {}).get('team-history', {}) if $.get('_document') else {}
+      version-control-status: |
+        $.get('_document', {}).get('team-history', {}).get('status', 'pending') if $.get('_document') else 'pending'
+      web-search-queries: |
+        [
+          {
+            'metadata': {
+              'content-group': $.get('_metadata', {}).get('content-group', ''),
+              'content-name': $.get('_metadata', {}).get('content-name', ''),
+              'content-topic': $.get('_metadata', {}).get('content-topic', ''),
+              'team_code': $.get('_metadata', {}).get('team_code', '')
+            },
+            'version_control': {
+              'finished': False,
+              'moderated': False,
+              'processing': False,
+              'updated': datetime.utcnow()
+            },
+            'title': item.get('title'),
+            'web-search-udm': $.get('_document', {}).get('agenda-object', {}).get('web-search-udm', 1),
+            'web-search-limit': $.get('_document', {}).get('agenda-object', {}).get('web-search-limit', 4),
+            'web-search-topic': item.get('type'),
+            'web-search-query': f"{item.get('query')}"
+          }
+          for item in $.get('_document', {}).get('agenda-object', {}).get('search_queries', [])
+        ][:2]
+
+  # 'web-search-query': f"{item.get('query')} after:{(datetime.utcnow() - timedelta(days=7)).strftime('%Y-%m-%d')}"

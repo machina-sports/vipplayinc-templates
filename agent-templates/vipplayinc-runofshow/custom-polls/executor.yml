@@ -1,0 +1,101 @@
+workflow:
+
+  name: runofshow-custom-polls-executor
+  title: "Run of Show - Custom Polls"
+  description: "Run of Show Custom Polls"
+  context-variables:
+    debugger:
+      enabled: true
+    google-genai:
+      api_key: "$TEMP_CONTEXT_VARIABLE_GOOGLE_GENERATIVE_AI_API_KEY"
+    machina-ai:
+      api_key: "$TEMP_CONTEXT_VARIABLE_SDK_OPENAI_API_KEY"
+  inputs:
+    custom-context: "$.get('custom_context') or None"
+    custom-instruction: "$.get('custom_instruction') or None"
+    event_code: "$.get('event_code') or None"
+    match_context: "$.get('match_context', 'disabled')"
+  outputs:
+    generated-questions: "$.get('generated-questions', [])"
+    workflow-status: "$.get('event-exists') is not True and 'skipped' or 'executed'"
+  tasks:
+
+    # load-event-by-code
+    - type: document
+      name: "load-event-by-code"
+      condition: "$.get('event_code') is not None"
+      config:
+        action: "search"
+        search-limit: 1
+        search-vector: false
+        search-sorters: ["start_time", 1]
+      filters:
+        metadata.event_code: "$.get('event_code')"
+      inputs:
+        name: "{'$in': ['soccer-game']}"
+      outputs:
+        event-exists: "len($.get('documents', [])) > 0 if $.get('documents') else False"
+        event-value: "$.get('documents')[0].get('value', {}) if $.get('documents') else None"
+
+    # mapping-soccer-event-summary
+    - type: mapping
+      name: mapping-soccer-event-summary
+      condition: "$.get('event-exists') is True"
+      inputs:
+        event_selected: "$.get('event-value', {})"
+      outputs:
+        event_code: "$.get('event_code')"
+        season: "$.get('season')"
+        season_title: "$.get('season_title')"
+        sport_event: "$.get('sport_event')"
+        sport_event_statistics: "$.get('sport_event_statistics')"
+        sport_event_status: "$.get('sport_event_status')"
+        sport_event_timeline: "$.get('sport_event_timeline')"
+        team_home_name: "$.get('team_home_name')"
+        team_away_name: "$.get('team_away_name')"
+        team_home_id: "$.get('team_home_id')"
+        team_away_id: "$.get('team_away_id')"
+        title: "$.get('title')"
+
+    # prompt-runofshow-custom-polls
+    - type: prompt
+      name: prompt-runofshow-custom-polls
+      description: "prompt-custom-polls"
+      condition: "$.get('event-exists') is True"
+      connector:
+        name: "google-genai"
+        command: "invoke_prompt"
+        model: "gemini-2.5-pro"
+      inputs:
+        _1_event-context: "$.get('event-value', {}) if $.get('match_context') == 'enabled' else None"
+        _2_custom-context: "$.get('custom-context', {})"
+        _3_custom-instruction: "$.get('custom-instruction')"
+      outputs:
+        generated-questions: "$.get('questions', [])"
+
+    # 0 bulk-content-custom-polls
+    - type: document
+      name: bulk-content-custom-polls
+      condition: "$.get('event-exists') is True"
+      description: "Bulk save the polls."
+      config:
+        action: "bulk-save"
+        embed-vector: false
+      document_name: "'content-poll'"
+      documents:
+        items: "$.get('parsed_polls', [])"
+      inputs:
+        parsed_polls: |
+          [
+            {
+              **c,
+              "metadata": {
+                "event_code": "$.(event_code)"
+              },
+              "version_control": {
+                "embed_image_status": "pending"
+              }
+            }
+            for c in $.get('generated-questions', [])
+          ]
+

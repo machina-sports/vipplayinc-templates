@@ -1,0 +1,37 @@
+mappings:
+
+  # coverage-researcher-moment-searching-map
+  - type: mapping
+    name: coverage-researcher-moment-searching-map
+    title: "Coverage - Researcher Moment Searching Mapping"
+    description: "Mapping data from Soccer Game Moment content generation"
+    outputs:
+      version-control: |
+        $.get('_document', {}).get('team-moment', {}) if $.get('_document') else {}
+      version-control-status: |
+        $.get('_document', {}).get('team-moment', {}).get('status', 'pending') if $.get('_document') else 'pending'
+      web-search-queries: |
+        [
+          {
+            'metadata': {
+              'content-group': $.get('_metadata', {}).get('content-group', ''),
+              'content-name': $.get('_metadata', {}).get('content-name', ''),
+              'content-topic': $.get('_metadata', {}).get('content-topic', ''),
+              'team_code': $.get('_metadata', {}).get('team_code', '')
+            },
+            'version_control': {
+              'finished': False,
+              'moderated': False,
+              'processing': False,
+              'updated': datetime.utcnow()
+            },
+            'title': item.get('title'),
+            'web-search-udm': $.get('_document', {}).get('agenda-object', {}).get('web-search-udm', 12),
+            'web-search-limit': $.get('_document', {}).get('agenda-object', {}).get('web-search-limit', 4),
+            'web-search-topic': item.get('type'),
+            'web-search-query': f"{item.get('query')} after:{(datetime.utcnow() - timedelta(days=7)).strftime('%Y-%m-%d')}"
+          }
+          for item in $.get('_document', {}).get('agenda-object', {}).get('search_queries', [])
+        ]
+
+  # 'web-search-query': f"{item.get('query')} after:{(datetime.utcnow() - timedelta(days=7)).strftime('%Y-%m-%d')}"

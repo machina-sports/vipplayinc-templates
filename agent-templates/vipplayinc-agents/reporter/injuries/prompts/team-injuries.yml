@@ -1,0 +1,32 @@
+prompts:
+
+  # coverage-reporter-injuries-team-injuries-prompt
+  - type: "prompt"
+    title: "Coverage - Reporter Team Injuries"
+    name: "coverage-reporter-injuries-team-injuries-prompt"
+    description: "Gera a seção sobre a lesão do jogador em foco e as outras lesões no time, com base no contexto."
+    instruction: |
+      Escreva em tom jornalístico, fluido e natural, em parágrafo corrido (sem cabeçalhos como "Jogador em foco" ou "Outras lesões" e sem listas).
+      Comece pelo jogador em foco, informando diagnóstico, quando/onde ocorreu (se disponível), status/prognóstico e disponibilidade.
+      Em seguida, conecte com as demais baixas do elenco, citando nomes, posições (se houver), tipo de lesão e status/disponibilidade.
+      Inclua possíveis substitutos e impactos táticos apenas se constarem no contexto.
+      Não invente informações. Não use emojis. Priorize clareza e concisão.
+    schema:
+      title: "PostBlogLesoesTime"
+      description: "Estrutura para relatar a lesão do jogador e o panorama de lesões do time."
+      type: "object"
+      properties:
+        section_title:
+          type: "string"
+          description: "Lesões: [Jogador foco] e situação do elenco. Título curto e objetivo (máx. 8 palavras)."
+        section_content:
+          type: "string"
+          description: |
+            1 parágrafo, até 100 palavras, tom jornalístico e natural.
+            Sem listas e sem cabeçalhos. Deve:
+            - Apresentar primeiro o jogador em foco (diagnóstico, origem se houver, status/prognóstico e disponibilidade)
+            - Integrar as demais lesões do elenco (nomes, posições se houver, tipo de lesão e status/disponibilidade)
+            - Mencionar substitutos/impactos táticos somente se estiver no contexto
+      required:
+        - section_title
+        - section_content

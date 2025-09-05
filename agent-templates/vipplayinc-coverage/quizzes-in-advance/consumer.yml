@@ -1,0 +1,20 @@
+agent:
+
+  name: coverage-quizzes-in-advance-consumer
+  title: "Coverage - Quizzes In Advance"
+  description: "Workflow to consume quizzes in advance before match starts."
+  context:
+    config-frequency: 0.2
+  workflows:
+
+    # coverage quiz generator
+    - name: "coverage-quizzes-in-advance-generator"
+      description: "Coverage Quizzes In Advance Generator"
+      outputs:
+        quizzes-generator-status: "$.get('workflow-status', False)"
+
+    # coverage quiz executor
+    - name: "coverage-quizzes-in-advance-executor"
+      description: "Coverage Quizzes In Advance Executor"
+      outputs:
+        quizzes-executor-status: "$.get('workflow-status', False)" 

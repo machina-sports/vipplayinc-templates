@@ -1,0 +1,378 @@
+workflow:
+
+  name: coverage-reporter-injuries
+  title: "Coverage - Reporter Injuries"
+  description: "Workflow to execute Reporter Injuries."
+  context-variables:
+    debugger:
+      enabled: true
+    google-genai:
+      api_key: "$TEMP_CONTEXT_VARIABLE_GOOGLE_GENERATIVE_AI_API_KEY"
+    machina-ai:
+      api_key: "$TEMP_CONTEXT_VARIABLE_SDK_OPENAI_API_KEY"
+    sportradar-soccer:
+      sportradar_api_key: "$TEMP_CONTEXT_VARIABLE_SPORTRADAR_SOCCER_V4_API_KEY"
+  inputs:
+    content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+    topic: "$.get('topic', 'statistics')"
+  outputs:
+    workflow-status: "$.get('workflow-status', 'skipped')"
+  tasks:
+
+    # docs: load-next-injury
+    - type: document
+      name: load-next-injury
+      connector:
+        name: machina-ai
+        command: "invoke_embedding"
+        model: "text-embedding-3-small"
+      config:
+        action: "search"
+        search-limit: 1
+        search-vector: false
+        search-sorters: ["value.version-control.updated", 1]
+      filters:
+        value.version-control.finished: "{'$ne': True}"
+        value.version-control.processing: "{'$ne': True}"
+      inputs:
+        name: "'content-injury'"
+      outputs:
+        injury-exists: "len($.get('documents', [])) > 0 if $.get('documents') else False"
+        injury-document: "$.get('documents', [{}])[0] if $.get('documents') else None"
+        injury-document-id: "$.get('documents', [{}])[0].get('_id', '') if $.get('documents') else ''"
+        injury-metadata: "$.get('documents', [{}])[0].get('metadata', {}) if $.get('documents') else None"
+        injury-value: "$.get('documents', [{}])[0].get('value', {}) if $.get('documents') else None"
+        event_code: "$.get('documents', [{}])[0].get('metadata', {}).get('event_code', '') if $.get('documents') else ''"
+        team_code: "$.get('documents', [{}])[0].get('metadata', {}).get('team_code', '') if $.get('documents') else ''"
+
+    # docs: injury-version-control-processing
+    - type: document
+      name: injury-version-control-processing
+      condition: "$.get('injury-exists') is True"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      filters:
+        document_id: "$.get('injury-document-id')"
+      documents:
+        content-injury: |
+          {
+            **$.get('injury-value', {}),
+            'version-control': {
+              **$.get('injury-value', {}).get('version-control', {}),
+              'processing': True,
+              'updated': datetime.utcnow()
+            }
+          }
+
+    ## GET OTHER INJURIES
+
+    # load-other-injuries
+    - type: document
+      name: load-other-injuries
+      condition: "$.get('event_code') is not None"
+      config:
+        action: "search"
+        search-limit: 10
+        search-vector: false
+        search-sorters: ["updated", -1]
+      filters:
+        metadata.event_code: "$.get('event_code')"
+        metadata.team_code: "$.get('team_code')"
+      inputs:
+        name: "{'$in': ['content-injury']}"
+      outputs:
+        other-injuries: "$.get('documents', [{}])[0].get('value', {}) if $.get('documents') else None"
+        other-injuries-bulk: |
+          [
+            {
+              **d.get('value', {}),
+              '_id': d.get('_id')
+            }
+            for d in $.get('documents', [])
+          ]
+
+    ## GET ODDS
+
+    # load-odds
+    - type: document
+      name: load-odds
+      condition: "$.get('event_code') is not None"
+      config:
+        action: "search"
+        search-limit: 10
+        search-vector: false
+        search-sorters: ["updated", -1]
+      filters:
+        metadata.event_code: "$.get('event_code')"
+        metadata.content_type: "'odds-analysis'"
+      inputs:
+        name: "{'$in': ['content-snippet']}"
+      outputs:
+        odds: "$.get('documents', [{}])[0].get('value', {}) if $.get('documents') else None"
+        odds-bulk: |
+          [
+            {
+              **d.get('value', {}),
+              '_id': d.get('_id')
+            }
+            for d in $.get('documents', [])
+          ]
+    
+    ## GET LAST EVENT CONTEXT
+
+    # load-event-context
+    - type: document
+      name: load-event-context
+      condition: "$.get('event_code') is not None"
+      config:
+        action: "search"
+        search-limit: 100
+        search-vector: false
+        search-sorters: ["updated", -1]
+      filters:
+        metadata.event_code: "$.get('event_code')"
+        metadata.content_type: "{'$in': ['last-match-analysis']}"
+        metadata.competitor_id: "$.get('team_code')"
+      inputs:
+        name: "{'$in': ['content-snippet']}"
+      outputs:
+        last-event-context: "$.get('documents', [{}])[0].get('value', {}) if $.get('documents') else None"
+        last-event-context-bulk: |
+          [
+            {
+              **d.get('value', {}),
+              '_id': d.get('_id')
+            }
+            for d in $.get('documents', [])
+          ]
+
+    # load-standings-context
+    - type: document
+      name: load-standings-context
+      condition: "$.get('event_code') is not None"
+      config:
+        action: "search"
+        search-limit: 100
+        search-vector: false
+        search-sorters: ["updated", -1]
+      filters:
+        metadata.event_code: "$.get('event_code')"
+        metadata.content_type: "'standings-analysis'"
+        metadata.competitor_id: "$.get('team_code')"
+      inputs:
+        name: "{'$in': ['content-snippet']}"
+      outputs:
+        standings-context: "$.get('documents', [{}])[0].get('value', {}) if $.get('documents') else None"
+        standings-context-bulk: |
+          [
+            {
+              **d.get('value', {}),
+              '_id': d.get('_id')
+            }
+            for d in $.get('documents', [])
+          ]
+    
+    ## GET NEXT EVENT CONTEXT
+
+    # load-event-by-code
+    - type: document
+      name: load-event-by-code
+      condition: "$.get('event_code') is not None"
+      config:
+        action: "search"
+        search-limit: 1
+        search-vector: false
+        search-sorters: ["value.start_time", 1]
+      filters:
+        metadata.event_code: "$.get('event_code')"
+      inputs:
+        name: "{'$in': ['soccer-game']}"
+      outputs:
+        game-exists: "len($.get('documents', [])) > 0 if $.get('documents') else False"
+        game-metadata: "$.get('documents')[0].get('metadata', {}) if $.get('documents') else None"
+        game-value: "$.get('documents')[0].get('value', {}) if $.get('documents') else None"
+
+    # coverage-mapping-sportradar-soccer
+    - type: mapping
+      name: coverage-mapping-sportradar-soccer
+      description: "Transform the sportradar soccer data"
+      condition: "$.get('game-exists') is True"
+      inputs:
+        event_selected: "$.get('game-value')"
+      outputs:
+        next_event_code: "$.get('event_code')"
+        next_event_date: "$.get('event_date')"
+        next_event_day_of_week: "$.get('event_day_of_week')"
+        next_event_name: "$.get('title')"
+        next_event_slug: "$.get('slug')"
+        next_event_venue: "$.get('venue_title')"
+        workflow-status: "'executed'"
+
+    ## CONTENT GENERATION
+
+    # prompt: coverage-reporter-injuries-heading-prompt
+    - type: "prompt"
+      name: "coverage-reporter-injuries-heading-prompt"
+      description: "Generate a preview for the upcoming game"
+      condition: "$.get('injury-exists') is True"
+      connector:
+        name: "google-genai"
+        command: "invoke_prompt"
+        model: "gemini-2.5-pro"
+      inputs:
+        _injury-document: "str($.get('injury-value'))"
+        _injury_next_event_name: "$.get('next_event_name')"
+        _injury_next_event_date: "$.get('next_event_date')"
+      outputs:
+        reporter-article-br-heading: "$.get('title')"  
+        reporter-article-br-subtitle: "$.get('subtitle')"
+        reporter-article-br-event-name: "$.get('event_name')"
+        reporter-article-br-event-date-time: "$.get('event_date_time')"
+        reporter-article-br-event-venue: "$.get('event_venue')"
+        reporter-article-br-slug: "$.get('slug')"
+
+    # prompt: coverage-reporter-injuries-team-injuries-prompt
+    - type: "prompt"
+      name: "coverage-reporter-injuries-team-injuries-prompt"
+      description: "Generate a preview for the team injuries"
+      condition: "$.get('injury-exists') is True"
+      connector:
+        name: "google-genai"
+        command: "invoke_prompt"
+        model: "gemini-2.5-pro"
+      inputs:
+        _injury-title: "$.get('injury-value', {}).get('title', {})"
+        _injury-team-name: "$.get('injury-value', {}).get('team', {})"
+        _injury-player-name: "$.get('injury-value', {}).get('name', {})"
+        _injury-player-position: "$.get('injury-value', {}).get('position', {})"
+        _injury-player-injury-type: "$.get('injury-value', {}).get('injury_type', {})"
+        _injury_other_injuries: "$.get('other-injuries-bulk', [])"
+      outputs:
+        reporter-article-br-team-injuries-title: "$.get('section_title')"
+        reporter-article-br-team-injuries-content: "$.get('section_content')"
+
+    # prompt: coverage-reporter-injuries-last-event-prompt
+    - type: "prompt"
+      name: "coverage-reporter-injuries-last-event-prompt"
+      description: "Generate a preview for the last game"
+      condition: "$.get('injury-exists') is True"
+      connector:
+        name: "google-genai"
+        command: "invoke_prompt"
+        model: "gemini-2.5-pro"
+      inputs:
+        _injury-team-name: "$.get('injury-value', {}).get('team', {})"
+        _injury_type: "$.get('injury-value', {}).get('injury_type', {})"
+        _injury_last_event_documents: "$.get('last-event-context-bulk', [])"
+      outputs:
+        reporter-article-br-last-event-title: "$.get('section_title')"
+        reporter-article-br-last-event-content: "$.get('section_content')"
+
+    # prompt: coverage-reporter-injuries-next-event-prompt
+    - type: "prompt"
+      name: "coverage-reporter-injuries-next-event-prompt"
+      description: "Generate a preview for the upcoming game"
+      condition: "$.get('injury-exists') is True"
+      connector:
+        name: "google-genai"
+        command: "invoke_prompt"
+        model: "gemini-2.5-pro"
+      inputs:
+        _injury_next_event_name: "$.get('next_event_name')"
+        _injury_next_event_date: "$.get('next_event_date')"
+        _injury_next_event_day_of_week: "$.get('next_event_day_of_week')"
+        _injury_next_event_venue: "$.get('next_event_venue')"
+        _injury_standings_context: "$.get('standings-context')"
+      outputs:
+        reporter-article-br-next-event-title: "$.get('section_title')"
+        reporter-article-br-next-event-content: "$.get('section_content')"
+
+    # prompt: coverage-reporter-injuries-odds-prompt
+    - type: "prompt"
+      name: "coverage-reporter-injuries-odds-prompt"
+      description: "Generate a preview for the upcoming game"
+      condition: "$.get('injury-exists') is True"
+      connector:
+        name: "google-genai"
+        command: "invoke_prompt"
+        model: "gemini-2.5-pro"
+      inputs:
+        _next_event_odds: "$.get('odds-bulk')"
+      outputs:
+        reporter-article-br-odds-title: "$.get('section_title')"
+        reporter-article-br-odds-content: "$.get('section_content')"
+
+    ## SAVE UPDATE ARTICLE
+
+    # update-article-br
+    - type: "document"
+      name: "update-article-br"
+      description: "Update the document."
+      condition: "$.get('injury-exists') is True"
+      config:
+        action: "update"
+        embed-vector: true
+        force-update: true
+      connector:
+        name: "machina-ai"
+        command: "invoke_embedding"
+        model: "text-embedding-3-small"
+      documents:
+        content-article: |
+          {
+            'section_1_title': $.get('reporter-article-br-team-injuries-title'),
+            'section_1_content': $.get('reporter-article-br-team-injuries-content'),
+            'section_2_title': $.get('reporter-article-br-last-event-title'),
+            'section_2_content': $.get('reporter-article-br-last-event-content'),
+            'section_3_title': $.get('reporter-article-br-next-event-title'),
+            'section_3_content': $.get('reporter-article-br-next-event-content'),
+            'section_4_title': $.get('reporter-article-br-odds-title'),
+            'section_4_content': $.get('reporter-article-br-odds-content'),
+            'execution': datetime.utcnow(),
+            'event-details': {
+              'match': $.get('reporter-article-br-event-name'),
+              'when': $.get('reporter-article-br-event-date-time'),
+              'venue': $.get('reporter-article-br-event-venue')
+            },
+            'slug': f"{$.get('reporter-article-br-slug')}-br",
+            'title': $.get('reporter-article-br-heading'),
+            'subtitle': $.get('reporter-article-br-subtitle'),
+            'status': 'active'
+          }
+      metadata:
+        content-group: "$.get('injury-metadata', {}).get('content-group')"
+        content-name: "$.get('injury-metadata', {}).get('content-name')"
+        content-topic: "$.get('injury-metadata', {}).get('content-topic')"
+        document_type: "'content-article'"
+        competition: "$.get('injury-metadata', {}).get('competition_id')"
+        event_code: "$.get('injury-metadata', {}).get('event_code')"
+        event_type: "$.get('injury-metadata', {}).get('event_type')"
+        injury-document-id: "$.get('injury-document-id')"
+        language: "'br'"
+
+    # VERSION CONTROL
+
+    # docs: injury-version-control-update
+    - type: document
+      name: injury-version-control-update
+      condition: "$.get('injury-exists') is True"
+      config:
+        action: "update"
+        embed-vector: false
+        force-update: true
+      filters:
+        document_id: "$.get('injury-document-id')"
+      documents:
+        content-injury: |
+          {
+            **$.get('injury-value', {}),
+            'version-control': {
+              **$.get('injury-value', {}).get('version-control', {}),
+              'counter': $.get('injury-value', {}).get('version-control', {}).get('counter', 0) + 1,
+              'finished': True,
+              'processing': False,
+              'updated': datetime.utcnow()
+            }
+          }

@@ -1,0 +1,246 @@
+prompts:
+
+  # prompt-live-event-analysis
+  - type: prompt
+    name: prompt-live-event-analysis
+    title: "Coverage - Live Event Analysis"
+    description: "Extract and analyze specific information from live soccer events across different phases of the match"
+    instruction: |
+      OBJECTIVE: Generate engaging statistical analyses that captivate fans with relevant data.
+      LANGUAGE: All outputs must be written in English.
+      
+      CORE RULES:
+      1. IDENTIFY NEW EVENTS (especially GOALS, CARDS, SUBSTITUTIONS)
+      2. Analyze statistically with clarity and interest
+      3. DO NOT repeat basic facts already covered by editors
+      4. FOCUS ON: relevant statistics, numbers that contextualize the match
+      5. NEVER create duplicate snippets - each snippet must be UNIQUE
+      
+      TIME CONVERSION:
+      For SEGUNDO_TEMPO events, convert the absolute game time to the second half relative time:
+      - Absolute time 46-90 min → Relative time 1-45 min of the second half
+      - Formula: relative_time = absolute_time - 45
+      - Conversion examples:
+        * 50 min of game = 5 min of the second half
+        * 65 min of game = 20 min of the second half  
+        * 70 min of game = 25 min of the second half
+        * 89 min of game = 44 min of the second half
+      - ALWAYS use relative time in the "momento" field when periodo = SEGUNDO_TEMPO
+      - For stoppage time: use continuous time (90+3 min = 48:00 of the second half)
+      
+      ANTI-DUPLICATE RULE (CRITICAL):
+      - CHECK if it already exists in history-snippets:
+        * Same moment (MM:SS) + same player = DUPLICATE
+        * Same event + same moment = DUPLICATE  
+        * Very similar subject = DUPLICATE
+      - If similarity is found → set "snippets: []" (empty array)
+      - PREFER not generating a snippet over generating a duplicate
+      
+      MANDATORY PROCESS:
+      
+      1. DATA VALIDATION:
+         - CHECK that numerical data exists in the documents
+         - VERIFY that player names are correct
+         - CONFIRM stats in data-team-stats or data-player-stats
+         - USE only neutral terms like "game", "match" if no specific context exists
+         - DO NOT proceed with unconfirmed information
+         
+      1.1. STATUS VALIDATION:
+         - CHECK "Status:" in context-status
+         - If Status: live → game is LIVE (periods: PRIMEIRO_TEMPO, SEGUNDO_TEMPO)
+         - If Status: closed → game ENDED (you may use POS_JOGO)
+         - POS_JOGO_AO_VIVO only for deep statistical analyses during live games
+      
+      2. SCAN data-timeline looking for:
+         - score_change (GOALS)
+         - yellow_card, red_card (CARDS)
+         - substitution (SUBSTITUTIONS)
+         - Events with a NEW timestamp
+      
+      3. PRIORITY:
+         - GOALS are the HIGHEST PRIORITY
+         - RED CARDS are second priority
+         - SUBSTITUTIONS are third priority
+         - Other statistics only if there are no new events
+      
+      HOW TO USE THE DATA:
+      
+      1. HISTORY-SNIPPETS: Check what has ALREADY been reported - DO NOT repeat
+      2. CONTEXT: Contextualization - DO NOT extract as novelty
+      3. DATA: Source of snippets - analyze to find NEW events
+      
+      SPECIAL ATTENTION FOR END OF GAME:
+      - When Status: closed, there is A LOT of post-game content available
+      - Final statistics can generate multiple unique snippets
+      - Individual performance analyses, statistical comparisons
+      - EACH statistic can be a different snippet
+      - DO NOT set snippets: [] just because the game ended
+      
+      POST-GAME OPPORTUNITIES:
+      📊 FINAL STATISTICS:
+      - Finishing efficiency (shots on target vs total)
+      - Individual player performance
+      - Defensive battle (tackles, interceptions)
+      - Discipline (cards and context)
+      - Temporal analysis (1st half vs 2nd half)
+      - Impact of substitutions
+      
+      💡 THERE IS ALWAYS UNIQUE POST-GAME CONTENT - be creative with the angles!
+      
+      DETAILED STATISTICS:
+      
+      TEAM (data-team-stats):
+      - Possession, shots (total/on target/off target)
+      - Fouls, cards, corners, offsides
+      
+      PLAYERS (data-player-stats):
+      - Goals, assists, shots per player
+      - Individual discipline, substitutions
+      
+      COMPARATIVE ANALYSIS:
+      - Compare with history-snippets
+      - Identify significant changes
+      - Relate events with statistical context
+      
+      EXAMPLES OF BALANCED ANALYSIS:
+      
+      ❌ "Martinez Quarta was sent off at 65 minutes"
+      ✅ "Martinez Quarta hurt River! He committed 4 fouls in 65 minutes (0.43/min), 28% above average. His sending off reduced the defensive efficiency from 2.1 to 1.7 tackles/10min."
+      
+      ❌ "Inter has 52% possession at 72 minutes"
+      ✅ "Inter took advantage of the numerical superiority! Possession rose from 50% to 58% in 7 minutes (16% growth). Offensive pace increased from 0.17 to 0.29 shots/min."
+      
+      VOCABULARY VARIATION:
+      - "grew significantly" instead of "EXPLODED"
+      - "controlled" instead of "DOMINATED"
+      - "hurt/compromised" instead of "DESTROYED"
+      - "had a big advantage" instead of "CRUSHED"
+      
+      CRITICAL RULES - PROHIBITIONS:
+      - DO NOT invent statistics, numbers, or data not provided
+      - DO NOT assume absence of events
+      - DO NOT assume match type (final, semifinal) without explicit information
+      - DO NOT use exaggerated terms without data support
+      - LIMIT yourself to documented facts
+      - ALWAYS verify that a number exists in the documents
+      
+      RATING CRITERIA (0-10):
+      - 9-10: Exceptional, well above average
+      - 7-8: Good performance, above average
+      - 5-6: Average, within expectations
+      - 3-4: Below expectations
+      - 0-2: Very weak
+    schema:
+      title: "LiveEventAnalysis"
+      description: "Extract specific snippets from the provided live events"
+      type: "object"
+      required:
+        - snippets
+      properties:
+        snippets:
+          type: "array"
+          description: "Snippets from live events that contain specific information about the match. ONLY include NEW events that do not exist in the history-snippets. If everything has already been covered, return an empty array []."
+          minItems: 0
+          maxItems: 1
+          items:
+            type: "object"
+            required:
+              - title
+              - content
+              - subject
+              - momento
+              - periodo
+              - play_type
+            properties:
+              content:
+                type: "string"
+                description: |
+                  Statistical analysis of EXACTLY 3 sentences. INCLUDE:
+                  - Specific numbers from the provided data
+                  - Statistical comparisons based on real data
+                  - Correlations between events connecting available data
+                  - Percentage variations from the provided data
+                  BALANCED TONE: engaging but precise language.
+                  VALIDATION: EVERY number MUST exist in the documents.
+              title:
+                type: "string"
+                description: "Descriptive title based ONLY on the real and NEW events found in the documents. Example: 'João Silva opens the scoring for Flamengo'"
+              subject:
+                type: "string"
+                description: "Specific event, player involved, or match moment based on what is in the documents and is new. ALWAYS include team names. VERIFY it is not a duplicate of the history-snippets. Example: 'Flamengo vs Vasco - João Silva's goal'"
+              momento:
+                type: "string"
+                description: |
+                  Specific moment in the format MM:SS (minutes:seconds).
+                  
+                  MANDATORY CONVERSION FOR SEGUNDO_TEMPO:
+                  - If periodo = SEGUNDO_TEMPO: use RELATIVE time (subtract 45 min)
+                  - Examples:
+                    * 50 absolute minutes = "05:00" (5 min of the second half)
+                    * 70 absolute minutes = "25:00" (25 min of the second half)
+                    * 89 absolute minutes = "44:00" (44 min of the second half)
+                    * 93 absolute minutes = "48:00" (48 min of the second half - stoppage time)
+                  
+                  For other periods:
+                  - PRIMEIRO_TEMPO: use absolute time (0-45 min)
+                  - PRE_JOGO: "00:00"
+                  - POS_JOGO: "90:00"
+                  - Stoppage time: use continuous time (e.g., "48:00" for 93 absolute minutes)
+              periodo:
+                type: "string"
+                description: |
+                  Code of the match phase:
+                  PRE_JOGO: Before kickoff
+                  PRIMEIRO_TEMPO: First 45 minutes + stoppage time
+                  INTERVALO: Halftime
+                  SEGUNDO_TEMPO: Second 45 minutes + stoppage time
+                  AGUARDANDO_PRORROGACAO: Waiting for extra time
+                  PRIMEIRO_TEMPO_PRORROGACAO: First half of extra time
+                  INTERVALO_PRORROGACAO: Extra time interval
+                  SEGUNDO_TEMPO_PRORROGACAO: Second half of extra time
+                  AGUARDANDO_PENALIDADES: Waiting for penalties
+                  PENALIDADES: Penalty shootout
+                  FIM_DE_JOGO: Final moment
+                  POS_JOGO_AO_VIVO: Statistical analyses during live game
+                  POS_JOGO: Post-match events (when Status: closed)
+                enum:
+                  - PRE_JOGO
+                  - PRIMEIRO_TEMPO
+                  - INTERVALO
+                  - SEGUNDO_TEMPO
+                  - AGUARDANDO_PRORROGACAO
+                  - PRIMEIRO_TEMPO_PRORROGACAO
+                  - INTERVALO_PRORROGACAO
+                  - SEGUNDO_TEMPO_PRORROGACAO
+                  - AGUARDANDO_PENALIDADES
+                  - PENALIDADES
+                  - FIM_DE_JOGO
+                  - POS_JOGO_AO_VIVO
+                  - POS_JOGO
+              play_type:
+                type: "string"
+                description: |
+                  Type of play or event:
+                  - NORMAL: Common match event
+                  - IMPORTANTE: Significant event that impacts the game
+                  - RESUMO_AUTOMATICO: Automatic summary of statistics
+                  - CARTAO_AMARELO: Yellow card
+                  - CARTAO_VERMELHO: Red card or sending off
+                  - SUBSTITUICAO: Substitution (players in/out)
+                  - GOL: Goal scored
+                  - GOL_CONTRA: Own goal
+                  - PENALTI: Penalty awarded, taken, or saved
+                  - POS_JOGO_OJOGO: Post-game analysis about the match
+                  - POS_JOGO_DESTAQUE: Post-game analysis of individual performances
+                enum:
+                  - NORMAL
+                  - IMPORTANTE
+                  - RESUMO_AUTOMATICO
+                  - CARTAO_AMARELO
+                  - CARTAO_VERMELHO
+                  - SUBSTITUICAO
+                  - GOL
+                  - GOL_CONTRA
+                  - PENALTI
+                  - POS_JOGO_OJOGO
+                  - POS_JOGO_DESTAQUE

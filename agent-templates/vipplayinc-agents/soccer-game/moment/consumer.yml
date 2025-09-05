@@ -1,0 +1,36 @@
+agent:
+
+  name: coverage-researcher-moment
+  title: "Coverage - Researcher Moment"
+  description: "Workflow to cover Soccer Game Moment."
+  context:
+    config-frequency: 0.1
+  workflows:
+
+    # Coverage Soccer Game Researcher searching
+    - name: coverage-researcher-searching
+      description: "Coverage Soccer Game Researcher Searching"
+      inputs:
+        content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+        topic: "$.get('topic', 'moment')"
+      outputs:
+        soccer-game-moment-searching-status: "$.get('workflow-status', False)"
+
+    # Coverage Soccer Game Researcher moderation
+    - name: coverage-researcher-moderation
+      description: "Coverage Soccer Game Researcher Moderation"
+      inputs:
+        content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+        topic: "$.get('topic', 'moment')"
+      outputs:
+        soccer-game-moment-moderation-status: "$.get('workflow-status', False)"
+
+    # Coverage Soccer Game Researcher snippets
+    - name: coverage-researcher-snippets
+      description: "Coverage Soccer Game Researcher Snippets"
+      inputs:
+        content-group: "$.get('content-group', 'SPORTS_SOCCER_GAME')"
+        topic: "$.get('topic', 'moment')"
+      outputs:
+        soccer-game-moment-snippets-status: "$.get('workflow-status', False)"
+  

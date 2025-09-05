@@ -1,0 +1,194 @@
+prompts:
+  # prompt-coverage-runofshow-commercial
+  - type: prompt
+    name: prompt-coverage-runofshow-commercial
+    title: "Coverage - Run of Show Commercial Integration"
+    description: "Generates creative commercial integration ideas for sponsors and partners during broadcasts and social media."
+    instruction: |
+        OBJETIVO: Criar sugestões de formatos comerciais criativos e orgânicos para integração com parceiros e patrocinadores durante transmissões e redes sociais.
+
+        DIRETRIZES:
+        - Desenvolver quadros patrocinados que se integrem naturalmente ao conteúdo
+        - Criar ativações com QR Code que gerem valor para o público
+        - Elaborar enquetes patrocinadas relevantes para o jogo
+        - Manter linguagem adequada à transmissão
+        - Garantir que as integrações sejam orgânicas e não invasivas
+        - Aproveitar momentos-chave do jogo para ativações
+
+        BRIEFING DE BUSCA DE IMAGENS/TEXTO:
+        - Fornecer termos relevantes separados por vírgula para busca de imagens
+        - SEMPRE prefixar com "Soccer" para evitar resultados não relacionados
+        - Incluir nomes dos times, nomes completos dos jogadores, estádio, liga, país ou nomes de cidades quando relevante
+
+    schema:
+      title: "CommercialIntegrationPlan"
+      description: |
+        REGRAS DAS INTEGRAÇÕES COMERCIAIS:
+
+        OBJETIVO:
+        - Integração orgânica com parceiros
+        - Geração de valor para o público
+        - Aproveitamento de momentos-chave
+        - Experiência não-invasiva
+        - Ativações relevantes ao contexto
+
+        DIRETRIZES:
+        - Quadros patrocinados naturais
+        - CTAs claros e diretos
+        - Promoções exclusivas atrativas
+        - Enquetes relevantes ao jogo
+        - Momentos estratégicos de ativação
+
+        ESTRUTURA:
+        - Quadros patrocinados
+        - Ativações com QR Code
+        - Enquetes patrocinadas
+        - Momentos de integração
+      type: "object"
+      required: ["campaign_name", "sponsored_segments", "qr_activations", "sponsored_polls", "key_moments"]
+      properties:
+        campaign_name:
+          type: "string"
+          description: "Nome da campanha (max 50 caracteres)"
+
+        sponsored_segments:
+          type: "array"
+          description: "Sugestões de quadros patrocinados durante a transmissão"
+          minItems: 3
+          maxItems: 10
+          items:
+            type: "object"
+            required: [
+              "segment_name",
+              "description",
+              "timing",
+              "integration_type",
+              "brand_visibility",
+              "text_to_search"
+            ]
+            properties:
+              segment_name:
+                type: "string"
+                description: "Nome do quadro com espaço para marca (max 50 caracteres, ex: 'O Momento Decisivo [Marca]')"
+              description:
+                type: "string"
+                description: "Descrição detalhada do quadro e sua dinâmica (max 200 caracteres)"
+              timing:
+                type: "string"
+                enum: ["Pre-jogo", "Primeiro Tempo", "Intervalo", "Segundo Tempo", "Pos-jogo"]
+              integration_type:
+                type: "string"
+                enum: ["Visual", "Narrativo", "Interativo", "Híbrido"]
+              brand_visibility:
+                type: "string"
+                description: "Como a marca será apresentada no quadro (max 100 caracteres)"
+              text_to_search:
+                type: "string"
+                description: |
+                  Lista de termos relevantes para busca de imagens, separados por vírgula. SEMPRE prefixar com "Soccer" para evitar resultados não relacionados.
+
+        qr_activations:
+          type: "array"
+          description: "Ativações com QR Code durante a transmissão"
+          minItems: 2
+          maxItems: 8
+          items:
+            type: "object"
+            required: [
+              "activation_name",
+              "description",
+              "cta_text",
+              "promotion_details",
+              "display_timing",
+              "target_audience"
+            ]
+            properties:
+              activation_name:
+                type: "string"
+                description: "Nome da ativação (max 50 caracteres)"
+              description:
+                type: "string"
+                description: "Descrição da ativação e benefício para o público (max 200 caracteres)"
+              cta_text:
+                type: "string"
+                description: "Texto do call-to-action para o QR Code (max 50 caracteres)"
+              promotion_details:
+                type: "string"
+                description: "Detalhes da promoção ou benefício exclusivo (max 150 caracteres)"
+              display_timing:
+                type: "string"
+                enum: ["Pre-jogo", "Primeiro Tempo", "Intervalo", "Segundo Tempo", "Pos-jogo", "Momento Específico"]
+              target_audience:
+                type: "string"
+                description: "Público-alvo principal da ativação (max 50 caracteres)"
+
+        sponsored_polls:
+          type: "array"
+          description: "Enquetes patrocinadas durante a transmissão"
+          minItems: 3
+          maxItems: 10
+          items:
+            type: "object"
+            required: [
+              "poll_title",
+              "description",
+              "options",
+              "timing",
+              "brand_integration",
+              "text_to_search"
+            ]
+            properties:
+              poll_title:
+                type: "string"
+                description: "Título da enquete com espaço para marca (max 50 caracteres)"
+              description:
+                type: "string"
+                description: "Descrição da enquete e sua relevância (max 150 caracteres)"
+              options:
+                type: "array"
+                description: "Opções de resposta (2-4 opções)"
+                minItems: 2
+                maxItems: 4
+                items:
+                  type: "string"
+              timing:
+                type: "string"
+                enum: ["Pre-jogo", "Primeiro Tempo", "Intervalo", "Segundo Tempo", "Pos-jogo"]
+              brand_integration:
+                type: "string"
+                description: "Como a marca será apresentada na enquete (max 100 caracteres)"
+              text_to_search:
+                type: "string"
+                description: |
+                  Lista de termos relevantes para busca de imagens, separados por vírgula. SEMPRE prefixar com "Soccer" para evitar resultados não relacionados.
+
+        key_moments:
+          type: "array"
+          description: "Momentos-chave para ativações comerciais"
+          minItems: 3
+          maxItems: 8
+          items:
+            type: "object"
+            required: [
+              "moment_name",
+              "description",
+              "integration_opportunity",
+              "brand_fit_categories"
+            ]
+            properties:
+              moment_name:
+                type: "string"
+                description: "Nome do momento-chave (max 50 caracteres)"
+              description:
+                type: "string"
+                description: "Descrição do momento e sua importância (max 150 caracteres)"
+              integration_opportunity:
+                type: "string"
+                description: "Como aproveitar comercialmente este momento (max 200 caracteres)"
+              brand_fit_categories:
+                type: "array"
+                description: "Categorias de marcas que melhor se adequam a este momento"
+                minItems: 1
+                maxItems: 5
+                items:
+                  type: "string"
